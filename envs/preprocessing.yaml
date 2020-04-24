@@ -1,0 +1,7 @@
+name: brassicaceae-hybseq-pipeline-offline
+channels:
+  - kantorlab
+  - bioconda
+dependencies:
+  - trimmomatic =0.36
+  - fastx_toolkit =0.0.14
