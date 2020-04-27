@@ -1,4 +1,4 @@
-name: brassicaceae-hybseq-pipeline-offline
+name: preprocessing
 channels:
   - kantorlab
   - bioconda
