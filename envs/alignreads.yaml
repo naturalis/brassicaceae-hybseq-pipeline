@@ -1,0 +1,7 @@
+name: alignreads
+channels:
+  - OpenEye
+  - conda-forge
+dependencies:
+  - python =2.7
+  - biopython =1.76
