@@ -67,3 +67,11 @@ rule count_reads_deduplication:
         "deduplicated_reads/SRR8528336/SRR8528336_count_reads.txt"
     shell:
         "grep '>' {input} | wc -l > {output}"
+
+rule alignreads:
+    input:
+        "deduplicated_reads/SRR8528336/SRR8528336_reads.fq",
+        "data/reference_genomes/ref-at.fasta"
+    shell:
+        "alignreads {input} --single-step --read-type solexa --read-orientation linear --percent-identity medium "
+        "--depth-position-masking 5 --proportion-base-filter 0.7"

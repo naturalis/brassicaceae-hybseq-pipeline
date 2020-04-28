@@ -14,7 +14,7 @@ For preprocessing:
 https://www.ebi.ac.uk/ena/data/view/SRX5331770
 and put the files in the path: ~/data/raw_reads/SRR8528336/
 so that: ./data/raw_reads/SRR8528336/SRR8528336_1.fastq.gz and ./data/raw_reads/SRR8528336/SRR8528336_2.fastq.gz 
-These are paired end reads: forward (_1) and reverse (_2)
+These are paired end reads: forward (1) and reverse (2)
 
 2) Install and download the necessary software packages for this project written in preprocessing.yaml. 
 Create the environment by running the following command in the main folder:
@@ -41,6 +41,10 @@ choose the recommended versions:
 YASRA-2.33.tar.gz
 lastz-1.03.02.tar.gz
 mummer 3.23
+
+5) To only use 'alignreads' instead of calling the python file, run the command:
+$ export PATH="$PATH:./src/installed_alignreads/alignreads"
+This is necessary for the use of Snakemake
 
 ---
 
