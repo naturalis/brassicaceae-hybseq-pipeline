@@ -9,7 +9,8 @@ rule trimming:
     output:
         temp(expand("trimmed_reads/SRR8528336/SRR8528336_{FRPU}.fq", FRPU = FRPU))
     shell:
-        "trimmomatic PE -phred33 {input} {output} LEADING:20 TRAILING:20 SLIDINGWINDOW:5:20 MINLEN:36"
+        "trimmomatic PE -phred33 {input} {output} ILLUMINACLIP:trimmomatic_adapter/TruSeq3-PE-2.fa:2:30:10 LEADING:20 "
+        "TRAILING:20 SLIDINGWINDOW:5:20 MINLEN:36"
 
 rule count_reads_trimming:
     input:

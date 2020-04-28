@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8210ff63-9dd7-44c4-9b03-2a5b00e37d4b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/brassicaceae-hybseq-pipeline.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/brassicaceae-hybseq-pipeline.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Snakefile" beforeDir="false" afterPath="$PROJECT_DIR$/Snakefile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/envs/preprocessing.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/envs/preprocessing.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -56,7 +55,7 @@
       <workItem from="1587745672218" duration="95000" />
       <workItem from="1587745929011" duration="140000" />
       <workItem from="1587746145468" duration="748000" />
-      <workItem from="1587995663204" duration="1901000" />
+      <workItem from="1587995663204" duration="3563000" />
     </task>
     <servers />
   </component>

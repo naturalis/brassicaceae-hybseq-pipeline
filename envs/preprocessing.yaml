@@ -3,5 +3,5 @@ channels:
   - kantorlab
   - bioconda
 dependencies:
-  - trimmomatic =0.36
+  - trimmomatic =0.33
   - fastx_toolkit =0.0.14
