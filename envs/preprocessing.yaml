@@ -1,7 +1,0 @@
-name: preprocessing
-channels:
-  - kantorlab
-  - bioconda
-dependencies:
-  - trimmomatic =0.33
-  - fastx_toolkit =0.0.14

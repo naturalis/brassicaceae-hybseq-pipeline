@@ -1,0 +1,20 @@
+name: brassicaceae-hybseq-pipeline
+channels:
+  - kantorlab
+  - bioconda
+  - conda-forge
+dependencies:
+  - trimmomatic =0.33
+  - fastx_toolkit =0.0.14
+  - python =2.7             # was alleen nodig voor alignreads.py
+  - biopython =1.76
+  - varscan =2.4.1
+  - samtools
+  - blat =35
+  #- mafft =6.851    #doet niet
+  - raxml =8.2.9
+  # macse
+  # astral II
+  # trespex
+  # treecmp
+  #- consel =1.20  # doet niet
