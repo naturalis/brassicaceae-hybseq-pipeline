@@ -14,29 +14,41 @@ and put the files in the path: ~/data/raw_reads/SRR8528336/
 so that: ./data/raw_reads/SRR8528336/SRR8528336_1.fastq.gz and ./data/raw_reads/SRR8528336/SRR8528336_2.fastq.gz 
 These are paired end reads: forward (1) and reverse (2)
 
-2) Install and download the necessary software packages for this project written in brassicaceae-hybseq-pipeline.yaml. 
+2) Download the sequence genome Arabidopsis lyrata subsp. lyrata (GCA_000004255.1) from:
+https://www.ncbi.nlm.nih.gov/assembly/GCF_000004255.2
+By clicking on the Download Assembly button and selecting GenBank as Source database and Genomic FASTA as file type.
+Unpack the .tar file by:
+`$ tar -vxf genome_assemblies_genome_fasta.tar`
+Go to the created directory named: ncbi-genomes-[date] by:
+`$ cd ncbi-genomes-[date]`
+Unpack the .gz file by:
+`$ gunzip GCA_000004255.1_v.1.0_genomic.fna.gz`
+Change the .fna file to arl_ref.fa file and paste this file back to the sequence_genomes directory by:
+`$ cp GCA_000004255.1_v.1.0_genomic.fna ../arl_ref.fa`
+
+3) Install and download the necessary software packages for this project written in brassicaceae-hybseq-pipeline.yaml. 
 Create the environment by running the following command in the main folder:
 `$ conda env create -f ./envs/brassicaceae-hybseq-pipeline.yaml`
 
-3) Go to the ./src folder
+4) Go to the ./src folder
 
-4) Install alignreads folder directory by running: 
+5) Install alignreads folder directory by running: 
 `$ git clone https://github.com/zachary-foster/alignreads`
 
-5) Install the software packages by running the command:
+6) Install the software packages by running the command:
 `$ python ./alignreads/install.py ./src/installed_alignreads`
 choose the recommended versions:
 YASRA-2.33.tar.gz
 lastz-1.03.02.tar.gz
 mummer 3.23
 
-6) Go back to the main folder
+7) Go back to the main folder
 
-7) To only use 'alignreads' instead of calling the python file, run the command:
+8) To only use 'alignreads' instead of calling the python file, run the command:
 `$ export PATH="$PATH:./src/installed_alignreads/alignreads"`
 This is necessary for the use of Snakemake
 
-8) In the main folder where the Snakefile is, run the Snakefile with the command:
+9) In the main folder where the Snakefile is, run the Snakefile with the command:
 `$ snakemake`
 
 
