@@ -47,25 +47,37 @@ h) Change the .fna file to arl_ref.fa file and paste this file back to the seque
 Create the environment by running the following command in the main folder:
 `$ conda env create -f ./envs/brassicaceae-hybseq-pipeline.yaml`
 
-4) Go to the ./src folder
+4) Activate this environment by:
+`$ conda activate brassicaceae-hybseq-pipeline`
 
-5) Install alignreads folder directory by running: 
+
+### Alignreads: not working yet
+5) Go to the ./src folder
+
+6) Install alignreads folder directory by running: 
 `$ git clone https://github.com/zachary-foster/alignreads`
 
-6) Install the software packages by running the command:
-`$ python ./alignreads/install.py ./src/installed_alignreads`
+7) Install the software packages by running the command:
+`$ python ./alignreads/install.py ./installed_alignreads`
 choose the recommended versions:
-YASRA-2.33.tar.gz
-lastz-1.03.02.tar.gz
-mummer 3.23
+(8) lastz-1.03.02.tar.gz
+`$ wget http://www.bx.psu.edu/~rsharris/lastz/newer/lastz-1.03.02.tar.gz`
 
-7) Go back to the main folder
+(1) YASRA-2.33.tar.gz
+`$ wget https://www.bx.psu.edu/miller_lab/dist/YASRA-2.33.tar.gz`
 
-8) To only use 'alignreads' instead of calling the python file, run the command:
+(1) mummer 3.23
+`$ wget -O MUMmer3.23.tar.gz https://sourceforge.net/projects/mummer/files/mummer/3.23/MUMmer3.23.tar.gz/download` 
+
+8) Go back to the main folder
+
+9) To only use 'alignreads' instead of calling the python file, run the command:
 `$ export PATH="$PATH:./src/installed_alignreads/alignreads"`
 This is necessary for the use of Snakemake
+###
 
-9) In the main folder where the Snakefile is, run the Snakefile with the command:
+
+10) In the main folder where the Snakefile is, run the Snakefile with the command:
 `$ snakemake`
 
 
