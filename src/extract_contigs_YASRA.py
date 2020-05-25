@@ -1,3 +1,4 @@
+# extract_contigs_YASRA.py
 # This script is to extract contigs and to create SAM files with headers for each of them after running YASRA.
 # YASRA creates a SAM file without header after mapping.
 # Made by: Elfy Ly
