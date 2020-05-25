@@ -1,42 +1,137 @@
-# mapping against reference using minimap2 instead of YASRA
-rule minimap2:
+# SAMPLES = ["SRR8528336"] # variables for every species
+
+#forward or reverse | paired or unpaired
+FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
+
+# variables within contigs: should be range(1, ALL CONTIG FILES IN DIR (FOR EVERY SPECIES))
+CONTIG_NRS = range(1, 2114)   #["1", "2", "3"]
+
+# all variables within snakemake
+deduplication_variables = expand("results/deduplicated_reads/SRR8528336/SRR8528336_{frpu}_dedupl.fq", frpu = FRPU)
+fsam_variables = expand("results/exons/sam/Contig{nr}_AT.sam", nr = CONTIG_NRS)
+fbam_variables = expand("results/exons/bam/Contig{nr}_AT.bam", nr = CONTIG_NRS)
+sorted_fbam_variables = expand("results/exons/sorted_bam/Contig{nr}_AT_sort.bam", nr = CONTIG_NRS)
+pileup_variables = expand("results/exons/pileup/Contig{nr}_AT_sort.pileup", nr = CONTIG_NRS)
+var_variables = expand("results/exons/var/Contig{nr}_AT_sort.var", nr = CONTIG_NRS)
+
+
+rule all:
     input:
-        "data/reference_genomes/ref-at.fasta data/raw_reads/SRR8528336_1.fastq.gz",
+        deduplication_variables, fsam_variables, fbam_variables, sorted_fbam_variables, pileup_variables, var_variables
+
+
+# preprocessing raw reads before alignment
+rule trimming:
+    input:
+        "data/raw_reads/SRR8528336_1.fastq.gz",
         "data/raw_reads/SRR8528336_2.fastq.gz"
     output:
-        "results/alignments/minimap2/SRR8528336_ref-at.sam"
+        expand("results/trimmed_reads/SRR8528336/SRR8528336_{FRPU}.fq", FRPU = FRPU)
     shell:
-        "minimap2 -ax sr {input} > {output}"
+        "trimmomatic PE -phred33 {input} {output} "
+        "ILLUMINACLIP:trimmomatic_adapter/TruSeq3-PE-2.fa:2:30:10 "
+        "LEADING:20 "
+        "TRAILING:20 "
+        "SLIDINGWINDOW:5:20 "
+        "MINLEN:36"
+
+rule count_reads_trimming:
+    input:
+        expand("results/trimmed_reads/SRR8528336/SRR8528336_{FRPU}.fq", FRPU = FRPU)
+    output:
+        "results/trimmed_reads/SRR8528336/SRR8528336_count_reads.txt"
+    shell:
+        "echo $(cat {input} | wc -l)/4|bc >> {output}"
+
+rule deduplication:
+    input:
+        "results/trimmed_reads/SRR8528336/SRR8528336_{frpu}.fq"
+    output:
+        "results/deduplicated_reads/SRR8528336/SRR8528336_{frpu}_dedupl.fq"
+    shell:
+        "fastx_collapser -v -i {input} -o {output}"
+
+rule combine:
+    input:
+        expand("results/deduplicated_reads/SRR8528336/SRR8528336_{FRPU}_dedupl.fq", FRPU = FRPU)
+    output:
+        "results/deduplicated_reads/SRR8528336/SRR8528336_reads.fq"
+    shell:
+         "cat {input} > {output}"
+
+rule count_reads_deduplication:
+    input:
+        "results/deduplicated_reads/SRR8528336/SRR8528336_reads.fq"
+    output:
+        "results/deduplicated_reads/SRR8528336/SRR8528336_count_reads.txt"
+    shell:
+        "grep '>' {input} | wc -l > {output}"
+
+'''
+# reference mapping and de novo using YASRA/alignreads.py
+# make sure to: export PATH="$PATH:src/installed_alignreads/alignreads"
+# this rule to be changed into multiple rules within the alignreads.py
+# YASRA has to be added as a package to Conda first
+rule alignreads:
+    input:
+        "results/deduplicated_reads/SRR8528336/SRR8528336_reads.fq",
+        "data/reference_genomes/ref-at.fasta"
+        #"src/installed_alignreads/alignreads/YASRA-2.33/test_data/454.fa",
+        #"src/installed_alignreads/alignreads/YASRA-2.33/test_data/rhino_template.fa"
+    shell:
+        "alignreads {input} "
+        "--single-step "
+        "--read-type solexa "
+        "--read-orientation linear "
+        "--percent-identity medium "
+        "--depth-position-masking 5- "
+        "--proportion-base-filter 0.7-"
+'''
+
+# extract contigs from created SAM file after YASRA and create per contig new SAM files with headers
+rule extract_contigs:
+    input:
+        "src/extract_contigs_YASRA.py"
+    shell:
+        "python3 {input}"
+
+rule convert_to_fSAM:
+    input:
+        "results/exons/txt/Contig{nr}_AT.txt"
+    output:
+        temp("results/exons/sam/Contig{nr}_AT.sam")
+    shell:
+        "cp {input} {output}"
 
 rule convert_to_fBAM:
     input:
-        "results/alignments/minimap2/SRR8528336_ref-at.sam"
+        "results/exons/sam/Contig{nr}_AT.sam"
     output:
-        "results/alignments/minimap2/SRR8528336_ref-at.bam"
+        temp("results/exons/bam/Contig{nr}_AT.bam")
     shell:
         "samtools view -bS {input} > {output}"
 
 rule sort_fBAM:
     input:
-        "results/alignments/minimap2/SRR8528336_ref-at.bam"
+        "results/exons/bam/Contig{nr}_AT.bam"
     output:
-        "results/alignments/minimap2/SRR8528336_ref-at_sort.bam"
+        temp("results/exons/sorted_bam/Contig{nr}_AT_sort.bam")
     shell:
         "samtools sort -m5G {input} -o {output}"
 
 rule convert_to_fpileup:
     input:
-        "results/alignments/minimap2/SRR8528336_ref-at_sort.bam"
+        "results/exons/sorted_bam/Contig{nr}_AT_sort.bam"
     output:
-        "results/alignments/minimap2/SRR8528336_ref-at_sort.pileup"
+        temp("results/exons/pileup/Contig{nr}_AT_sort.pileup")
     shell:
         "samtools mpileup -B {input} > {output}"
 
 rule SNP_calling:
     input:
-        "results/alignments/minimap2/SRR8528336_ref-at_sort.pileup"
+        "results/exons/pileup/Contig{nr}_AT_sort.pileup"
     output:
-        "results/alignments/minimap2/SRR8528336_ref-at_sort.var"
+        "results/exons/var/Contig{nr}_AT_sort.var"
     shell:
         "varscan pileup2cns {input} "
         "--min-freq-for-hom 0.6 "
@@ -47,13 +142,20 @@ rule SNP_calling:
         "> {output}"
 
 
-# extract exons from sequence genomes
+# extract reads from sequence genomes
+rule extract_reads:
+    input:
+        "src/retrieve_exons_sequence_genomes.py"
+    shell:
+        "python {input}"
+
+# identify contigs from sequence genomes
 rule blat_sequence_genomes:
     input:
         "data/reference_genomes/ref-at.fasta",
-        "data/sequence_genomes/arl_ref.fa"
+        "data/sequence_genomes/sis_ref/KE154134.1.txt"
     output:
-        "results/blat/at_arl.psl"
+        "results/blat/at_sis_KE154134.1.psl"
     shell:
          "blat "
          "-t=dnax "

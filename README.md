@@ -52,8 +52,8 @@ Create the environment by running the following command in the main folder:
 4) Activate this environment by:
 `$ conda activate brassicaceae-hybseq-pipeline`
 
+Download alignreads.py:		# alignreads.py is currently installed in /usr/local/src/alignreads
 
-### Alignreads: not working yet
 5) Go to the ./src folder
 
 6) Install alignreads folder directory by running: 
@@ -63,21 +63,14 @@ Create the environment by running the following command in the main folder:
 `$ python ./alignreads/install.py ./installed_alignreads`
 choose the recommended versions:
 (8) lastz-1.03.02.tar.gz
-`$ wget http://www.bx.psu.edu/~rsharris/lastz/newer/lastz-1.03.02.tar.gz`
-
 (1) YASRA-2.33.tar.gz
-`$ wget https://www.bx.psu.edu/miller_lab/dist/YASRA-2.33.tar.gz`
-
 (1) mummer 3.23
-`$ wget -O MUMmer3.23.tar.gz https://sourceforge.net/projects/mummer/files/mummer/3.23/MUMmer3.23.tar.gz/download` 
 
 8) Go back to the main folder
 
 9) To only use 'alignreads' instead of calling the python file, run the command:
 `$ export PATH="$PATH:./src/installed_alignreads/alignreads"`
 This is necessary for the use of Snakemake
-###
-
 
 10) In the main folder where the Snakefile is, run the Snakefile with the command:
 `$ snakemake`
