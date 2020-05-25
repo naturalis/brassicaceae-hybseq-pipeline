@@ -1,4 +1,6 @@
 # brassicaceae-hybseq-pipeline
+This is obtained by running the command:
+$ git clone https://github.com/naturalis/brassicaceae-hybseq-pipeline.git
 
 This bioinformatics pipeline is used for the phylogenetic reconstruction of Brassicaceae using hybrid sequencing data.
 
@@ -32,16 +34,16 @@ b) Go to this path:
 `$ cd data/sequence_genomes/download`
 c) Download list of all GenBank files:
 `$ wget ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_genbank.txt`
-d) Get the download link of the correct genome by:
+d) Get the download link of the correct genome and save this in ftp_folder.txt by:
 `$ grep -E 'GCF_000004255.2' assembly_summary_genbank.txt | cut -f 20 > ftp_folder.txt`
 e) Create folder and script to save the links:
 `awk 'BEGIN{FS=OFS="/";filesuffix="genomic.fna.gz"}{ftpdir=$0;asm=$10;file=asm"_"filesuffix;print "wget "ftpdir,file}' ftp_folder.txt > download_fna_files.sh`
 f) Download the sequence genome by:
 `$ source download_fna_files.sh`
-g) Unpack the .gz file by:
+g) Unpack the .gz file by: (is not necessary)
 `$ gunzip GCA_000004255.1_v.1.0_genomic.fna.gz`
-h) Change the .fna file to arl_ref.fa file and paste this file back to the sequence_genomes directory by:
-`$ cp GCA_000004255.1_v.1.0_genomic.fna ../arl_ref.fa`
+h) Change the .fna file to arl_ref.fa file and move this file back to the sequence_genomes directory by:
+`$ mv GCA_000004255.1_v.1.0_genomic.fna ../arl_ref.fa`
 
 3) Install and download the necessary software packages for this project written in brassicaceae-hybseq-pipeline.yaml. 
 Create the environment by running the following command in the main folder:
