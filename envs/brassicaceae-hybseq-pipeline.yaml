@@ -6,8 +6,10 @@ channels:
 dependencies:
   - trimmomatic =0.33
   - fastx_toolkit =0.0.14
-  - python =2.7             # was alleen nodig voor alignreads.py
-  - biopython =1.76
+  - python =2.7             # alignreads.py
+  - biopython =1.76         # YASRA
+  - lastz                   # YASRA
+  - mummer =3.23            # YASRA
   - varscan =2.4.1
   - samtools
   - blat =35
