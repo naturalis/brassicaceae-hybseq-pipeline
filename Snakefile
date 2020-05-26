@@ -1,4 +1,4 @@
-# SAMPLES = ["SRR8528336"] # variables for every species
+# SAMPLES = ["SRR8528337"] # variables for every species
 
 #forward or reverse | paired or unpaired
 FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
@@ -7,7 +7,7 @@ FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "
 CONTIG_NRS = range(1, 2114)   #["1", "2", "3"]
 
 # all variables within snakemake
-deduplication_variables = expand("results/deduplicated_reads/SRR8528336/SRR8528336_{frpu}_dedupl.fq", frpu = FRPU)
+deduplication_variables = expand("results/deduplicated_reads/SRR8528337/SRR8528337_{frpu}_dedupl.fq", frpu = FRPU)
 fsam_variables = expand("results/exons/sam/Contig{nr}_AT.sam", nr = CONTIG_NRS)
 fbam_variables = expand("results/exons/bam/Contig{nr}_AT.bam", nr = CONTIG_NRS)
 sorted_fbam_variables = expand("results/exons/sorted_bam/Contig{nr}_AT_sort.bam", nr = CONTIG_NRS)
@@ -23,10 +23,10 @@ rule all:
 # preprocessing raw reads before alignment
 rule trimming:
     input:
-        "data/raw_reads/SRR8528336_1.fastq.gz",
-        "data/raw_reads/SRR8528336_2.fastq.gz"
+        "data/raw_reads/SRR8528337_1.fastq.gz",
+        "data/raw_reads/SRR8528337_2.fastq.gz"
     output:
-        expand("results/trimmed_reads/SRR8528336/SRR8528336_{FRPU}.fq", FRPU = FRPU)
+        expand("results/trimmed_reads/SRR8528337/SRR8528337_{FRPU}.fq", FRPU = FRPU)
     shell:
         "trimmomatic PE -phred33 {input} {output} "
         "ILLUMINACLIP:trimmomatic_adapter/TruSeq3-PE-2.fa:2:30:10 "
@@ -37,44 +37,42 @@ rule trimming:
 
 rule count_reads_trimming:
     input:
-        expand("results/trimmed_reads/SRR8528336/SRR8528336_{FRPU}.fq", FRPU = FRPU)
+        expand("results/trimmed_reads/SRR8528337/SRR8528337_{FRPU}.fq", FRPU = FRPU)
     output:
-        "results/trimmed_reads/SRR8528336/SRR8528336_count_reads.txt"
+        "results/trimmed_reads/SRR8528337/SRR8528337_count_reads.txt"
     shell:
         "echo $(cat {input} | wc -l)/4|bc >> {output}"
 
 rule deduplication:
     input:
-        "results/trimmed_reads/SRR8528336/SRR8528336_{frpu}.fq"
+        "results/trimmed_reads/SRR8528337/SRR8528337_{frpu}.fq"
     output:
-        "results/deduplicated_reads/SRR8528336/SRR8528336_{frpu}_dedupl.fq"
+        "results/deduplicated_reads/SRR8528337/SRR8528337_{frpu}_dedupl.fq"
     shell:
         "fastx_collapser -v -i {input} -o {output}"
 
 rule combine:
     input:
-        expand("results/deduplicated_reads/SRR8528336/SRR8528336_{FRPU}_dedupl.fq", FRPU = FRPU)
+        expand("results/deduplicated_reads/SRR8528337/SRR8528337_{FRPU}_dedupl.fq", FRPU = FRPU)
     output:
-        "results/deduplicated_reads/SRR8528336/SRR8528336_reads.fq"
+        "results/deduplicated_reads/SRR8528337/SRR8528337_reads.fq"
     shell:
          "cat {input} > {output}"
 
 rule count_reads_deduplication:
     input:
-        "results/deduplicated_reads/SRR8528336/SRR8528336_reads.fq"
+        "results/deduplicated_reads/SRR8528337/SRR8528337_reads.fq"
     output:
-        "results/deduplicated_reads/SRR8528336/SRR8528336_count_reads.txt"
+        "results/deduplicated_reads/SRR8528337/SRR8528337_count_reads.txt"
     shell:
         "grep '>' {input} | wc -l > {output}"
 
-'''
 # reference mapping and de novo using YASRA/alignreads.py
-# make sure to: export PATH="$PATH:src/installed_alignreads/alignreads"
+# make sure to: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads"
 # this rule to be changed into multiple rules within the alignreads.py
-# YASRA has to be added as a package to Conda first
 rule alignreads:
     input:
-        "results/deduplicated_reads/SRR8528336/SRR8528336_reads.fq",
+        "results/deduplicated_reads/SRR8528337/SRR8528337_reads.fq",
         "data/reference_genomes/ref-at.fasta"
         #"src/installed_alignreads/alignreads/YASRA-2.33/test_data/454.fa",
         #"src/installed_alignreads/alignreads/YASRA-2.33/test_data/rhino_template.fa"
@@ -86,7 +84,6 @@ rule alignreads:
         "--percent-identity medium "
         "--depth-position-masking 5- "
         "--proportion-base-filter 0.7-"
-'''
 
 # extract contigs from created SAM file after YASRA and create per contig new SAM files with headers
 rule extract_contigs:
