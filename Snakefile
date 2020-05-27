@@ -4,15 +4,15 @@
 FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
 
 # variables within contigs: should be range(1, ALL CONTIG FILES IN DIR (FOR EVERY SPECIES))
-CONTIG_NRS = range(1, 2114)   #["1", "2", "3"]
+CONTIG_NRS = range(1, 1905)   #["1", "2", "3"]
 
 # all variables within snakemake
 deduplication_variables = expand("results/deduplicated_reads/SRR8528337/SRR8528337_{frpu}_dedupl.fq", frpu = FRPU)
-fsam_variables = expand("results/exons/sam/Contig{nr}_AT.sam", nr = CONTIG_NRS)
-fbam_variables = expand("results/exons/bam/Contig{nr}_AT.bam", nr = CONTIG_NRS)
-sorted_fbam_variables = expand("results/exons/sorted_bam/Contig{nr}_AT_sort.bam", nr = CONTIG_NRS)
-pileup_variables = expand("results/exons/pileup/Contig{nr}_AT_sort.pileup", nr = CONTIG_NRS)
-var_variables = expand("results/exons/var/Contig{nr}_AT_sort.var", nr = CONTIG_NRS)
+fsam_variables = expand("results/assembled_exons/SRR8528337/sam/Contig{nr}_AT.sam", nr = CONTIG_NRS)
+fbam_variables = expand("results/assembled_exons/SRR8528337/bam/Contig{nr}_AT.bam", nr = CONTIG_NRS)
+sorted_fbam_variables = expand("results/assembled_exons/SRR8528337/sorted_bam/Contig{nr}_AT_sort.bam", nr = CONTIG_NRS)
+pileup_variables = expand("results/assembled_exons/SRR8528337/pileup/Contig{nr}_AT_sort.pileup", nr = CONTIG_NRS)
+var_variables = expand("results/assembled_exons/SRR8528337/var/Contig{nr}_AT_sort.var", nr = CONTIG_NRS)
 
 
 rule all:
@@ -94,41 +94,41 @@ rule extract_contigs:
 
 rule convert_to_fSAM:
     input:
-        "results/exons/txt/Contig{nr}_AT.txt"
+        "results/assembled_exons/SRR8528337/txt/Contig{nr}_AT.txt"
     output:
-        temp("results/exons/sam/Contig{nr}_AT.sam")
+        temp("results/assembled_exons/SRR8528337/sam/Contig{nr}_AT.sam")
     shell:
         "cp {input} {output}"
 
 rule convert_to_fBAM:
     input:
-        "results/exons/sam/Contig{nr}_AT.sam"
+        "results/assembled_exons/SRR8528337/sam/Contig{nr}_AT.sam"
     output:
-        temp("results/exons/bam/Contig{nr}_AT.bam")
+        temp("results/assembled_exons/SRR8528337/bam/Contig{nr}_AT.bam")
     shell:
         "samtools view -bS {input} > {output}"
 
 rule sort_fBAM:
     input:
-        "results/exons/bam/Contig{nr}_AT.bam"
+        "results/assembled_exons/SRR8528337/bam/Contig{nr}_AT.bam"
     output:
-        temp("results/exons/sorted_bam/Contig{nr}_AT_sort.bam")
+        temp("results/assembled_exons/SRR8528337/sorted_bam/Contig{nr}_AT_sort.bam")
     shell:
         "samtools sort -m5G {input} -o {output}"
 
 rule convert_to_fpileup:
     input:
-        "results/exons/sorted_bam/Contig{nr}_AT_sort.bam"
+        "results/assembled_exons/SRR8528337/sorted_bam/Contig{nr}_AT_sort.bam"
     output:
-        temp("results/exons/pileup/Contig{nr}_AT_sort.pileup")
+        temp("results/assembled_exons/SRR8528337/pileup/Contig{nr}_AT_sort.pileup")
     shell:
         "samtools mpileup -B {input} > {output}"
 
 rule SNP_calling:
     input:
-        "results/exons/pileup/Contig{nr}_AT_sort.pileup"
+        "results/assembled_exons/SRR8528337/pileup/Contig{nr}_AT_sort.pileup"
     output:
-        "results/exons/var/Contig{nr}_AT_sort.var"
+        "results/assembled_exons/SRR8528337/var/Contig{nr}_AT_sort.var"
     shell:
         "varscan pileup2cns {input} "
         "--min-freq-for-hom 0.6 "
