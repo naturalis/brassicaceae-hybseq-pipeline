@@ -7,14 +7,30 @@
 import os
 
 path_to_YASRA_fSAM = '/results/alignments/SRR8528336_reads.fq_ref-at.fasta_Mon-May-25-08:50:00-2020/YASRA_related_files/alignments_SRR8528336_reads.fq_ref-at.fasta.sam'
-path_to_assembled_exons = './results/assembled_exons/SRR8628336/txt'
+path_to_assembled_exons = './results/assembled_exons'
+path_to_species = path_to_assembled_exons + '/SRR8628336'
+path_to_txt = path_to_species + '/txt'
 
-# Create target Directory if don't exist
+# Create assembled_exons directory if it doesn't exist
 if not os.path.exists(path_to_assembled_exons):
     os.mkdir(path_to_assembled_exons)
     print("Directory ", path_to_assembled_exons, " Created ")
 else:
     print("Directory ", path_to_assembled_exons, " already exists")
+
+# Create species directory if it doesn't exist
+if not os.path.exists(path_to_species):
+    os.mkdir(path_to_species)
+    print("Directory ", path_to_species, " Created ")
+else:
+    print("Directory ", path_to_species, " already exists")
+
+# Create txt directory if it doesn't exist
+if not os.path.exists(path_to_txt):
+    os.mkdir(path_to_txt)
+    print("Directory ", path_to_txt, " Created ")
+else:
+    print("Directory ", path_to_txt, " already exists")
 
 ncontigs = 0
 nexons = 0
