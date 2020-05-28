@@ -3,11 +3,14 @@
 # Made by: Elfy Ly
 # Date: 28 May 2020
 
+import os
+
 SPECIES = "SRR8528336"
 CONTIGNR = 8
 
 path_to_assembled_exons_dir = "./results/assembled_exons/"
-path_to_fvar = path_to_assembled_exons_dir + SPECIES + "/var/" + "Contig" + str(CONTIGNR) + "_AT_sort.var"
+fvar_name = "Contig" + str(CONTIGNR) + "_AT_sort.var"
+path_to_fvar = path_to_assembled_exons_dir + SPECIES + "/var/" + fvar_name
 
 seq = ""
 nsnps = 0
@@ -23,11 +26,43 @@ with open(path_to_fvar, 'rt') as myfile:
                 seq += cons
             elif cons == 'N':
                 nsnps += 1
-                avcov += reads2
+                avcov += int(reads2)
 
 if nsnps > 0:
-    avcov = avcov / nsnps
+    avcov /= nsnps
 
 print("avcov: " + str(avcov))
 print("seq: " + seq)
 print("nsnps: " + str(nsnps))
+seq_length = len(seq)
+print("seq length: " + str(seq_length))
+
+
+# Create consensus directory if it doesn't exist
+path_to_consensus_dir = "./results/consensus/"
+path_to_consensus_species_dir = path_to_consensus_dir + SPECIES + "/"
+
+if not os.path.exists(path_to_consensus_dir):
+    os.mkdir(path_to_consensus_dir)
+    print("Directory ", path_to_consensus_dir, " Created ")
+else:
+    print("Directory ", path_to_consensus_dir, " already exists")
+
+if not os.path.exists(path_to_consensus_species_dir):
+    os.mkdir(path_to_consensus_species_dir)
+    print("Directory ", path_to_consensus_species_dir, " Created ")
+else:
+    print("Directory ", path_to_consensus_species_dir, " already exists")
+
+
+ncontigs = 0
+if seq_length > 0:
+    f = open(path_to_consensus_species_dir + "Contig " + str(CONTIGNR) + ".txt", "w+")
+    print("New text file created: " + "Contig " + str(CONTIGNR) + ".fa")
+    f.write(">Contig" + str(CONTIGNR) + "\n" + seq + "\n")
+    f.close()
+    ncontigs += 1
+else:
+    print("Fasta file is not printed: " + "Contig " + str(CONTIGNR))
+
+
