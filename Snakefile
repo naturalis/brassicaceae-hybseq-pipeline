@@ -20,14 +20,20 @@ rule all:
     input:
         deduplication_variables, fsam_variables, fbam_variables, sorted_fbam_variables, pileup_variables, var_variables
 
+rule gunzip:
+    input:
+        "data/raw_reads/SRR8528337_1.fastq.gz",
+        "data/raw_reads/SRR8528337_2.fastq.gz"
+    shell:
+        "gunzip {input}"
+
 rule count_raw_reads:
     input:
-        forward="data/raw_reads/SRR8528337_1.fastq.gz",
-        reverse="data/raw_reads/SRR8528337_2.fastq.gz"
+        forward="data/raw_reads/SRR8528337_1.fastq",
+        reverse="data/raw_reads/SRR8528337_2.fastq"
     output:
         "data/raw_reads/SRR8528337_count_reads.txt"
     shell:
-        "gunzip {input} | "
         "echo $(cat {input.forward} | grep 'HISEQ' | wc -l) + $(cat {input.reverse} | grep 'HISEQ' | wc -l) | "
         "bc > {output}"
 
