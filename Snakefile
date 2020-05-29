@@ -4,7 +4,8 @@
 FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
 
 # variables within contigs: should be range(1, ALL CONTIG FILES IN DIR (FOR EVERY SPECIES))
-CONTIG_NRS = range(1, 1905)   #["1", "2", "3"]
+CONTIGS_IN_DIR = 1905
+CONTIG_NRS = range(1, CONTIGS_IN_DIR+1)   #["1", "2", "3"]
 
 # all variables within snakemake
 deduplication_variables = expand("results/deduplicated_reads/SRR8528337/SRR8528337_{frpu}_dedupl.fq", frpu = FRPU)
@@ -19,12 +20,22 @@ rule all:
     input:
         deduplication_variables, fsam_variables, fbam_variables, sorted_fbam_variables, pileup_variables, var_variables
 
+rule count_raw_reads:
+    input:
+        forward="data/raw_reads/SRR8528337_1.fastq.gz",
+        reverse="data/raw_reads/SRR8528337_2.fastq.gz"
+    output:
+        "data/raw_reads/SRR8528337_count_reads.txt"
+    shell:
+        "gunzip {input} | "
+        "echo $(cat {input.forward} | grep 'HISEQ' | wc -l) + $(cat {input.reverse} | grep 'HISEQ' | wc -l) | "
+        "bc > {output}"
 
 # preprocessing raw reads before alignment
 rule trimming:
     input:
-        "data/raw_reads/SRR8528337_1.fastq.gz",
-        "data/raw_reads/SRR8528337_2.fastq.gz"
+        "data/raw_reads/SRR8528337_1.fastq",
+        "data/raw_reads/SRR8528337_2.fastq"
     output:
         expand("results/trimmed_reads/SRR8528337/SRR8528337_{FRPU}.fq", FRPU = FRPU)
     shell:
