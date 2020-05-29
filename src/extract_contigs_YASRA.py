@@ -6,31 +6,48 @@
 
 import os
 
-path_to_YASRA_fSAM = '/results/alignments/SRR8528336_reads.fq_ref-at.fasta_Mon-May-25-08:50:00-2020/YASRA_related_files/alignments_SRR8528336_reads.fq_ref-at.fasta.sam'
+
+# Create directory of given path if it doesn't exist
+def create_dir(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+        print("Directory ", path, " Created ")
+    else:
+        print("Directory ", path, " already exists")
+
+
+def create_new_fSAM(path_to_txt, contig_number, reference_genome, contig, contig_length, myline):
+    f = open(path_to_txt + "/" + contig_number + "_" + reference_genome + ".txt", "w+")
+    print("New text file created: " + contig_number + "_" + reference_genome)
+
+    f.write("@HD\tVN:1.3\n@SQ\tSN:" + contig + "\tLN:" + str(contig_length) + "\n" + myline)
+    f.close()
+
+
+def write_to_fSAM(path_to_txt, contig_number, reference_genome, myline):
+    f = open(path_to_txt + "/" + contig_number + "_" + reference_genome + ".txt", "a+")
+    f.write(myline)
+    f.close()
+
+
+def count_save_stats(path_to_txt, ncontigs, nexons):
+    f = open(path_to_txt + "/number_of_contigs_and_exons.txt", "w+")
+    f.write("Number of contigs: " + str(ncontigs) + "\nNumber of exons: " + str(nexons) + "\n")
+    f.close()
+
+
+# Creating paths for output directory
+# Deze paths moeten nog automatisch laten loopen, maar daarvoor moet eerst deze output directory naam gewijzigd worden
+path_to_YASRA_fSAM = './results/alignments/SRR8528336_reads.fq_ref-at.fasta_Mon-May-25-08:50:00-2020/' \
+                     'YASRA_related_files/alignments_SRR8528336_reads.fq_ref-at.fasta.sam'
 path_to_assembled_exons = './results/assembled_exons'
-path_to_species = path_to_assembled_exons + '/SRR8628336'
+path_to_species = path_to_assembled_exons + '/SRR8528336'
 path_to_txt = path_to_species + '/txt'
 
-# Create assembled_exons directory if it doesn't exist
-if not os.path.exists(path_to_assembled_exons):
-    os.mkdir(path_to_assembled_exons)
-    print("Directory ", path_to_assembled_exons, " Created ")
-else:
-    print("Directory ", path_to_assembled_exons, " already exists")
+create_dir(path_to_assembled_exons)
+create_dir(path_to_species)
+create_dir(path_to_txt)
 
-# Create species directory if it doesn't exist
-if not os.path.exists(path_to_species):
-    os.mkdir(path_to_species)
-    print("Directory ", path_to_species, " Created ")
-else:
-    print("Directory ", path_to_species, " already exists")
-
-# Create txt directory if it doesn't exist
-if not os.path.exists(path_to_txt):
-    os.mkdir(path_to_txt)
-    print("Directory ", path_to_txt, " Created ")
-else:
-    print("Directory ", path_to_txt, " already exists")
 
 ncontigs = 0
 nexons = 0
@@ -40,29 +57,18 @@ with open(path_to_YASRA_fSAM, 'rt') as myfile:
     for myline in myfile:
         if myline.startswith('>'):
             ncontigs += 1
-            qname, flag, contig, pos, mapq, cigar, rnext, pnext, tlen, read, phred  = myline.split("\t")
+            qname, flag, contig, pos, mapq, cigar, rnext, pnext, tlen, read, phred = myline.split("\t")
 
             contig_number, reference_genome, contig_start, contig_end = contig.split("_")
             contig_length = int(contig_end) - int(contig_start) + 1
 
             if contig != contig_name_temporary:
-                f = open(path_to_assembled_exons + "/" + contig_number + "_" + reference_genome + ".txt", "w+")
-                print("New text file created: " + contig_number + "_" + reference_genome)
-
-                f.write("@HD\tVN:1.3\n@SQ\tSN:" + contig + "\tLN:" + str(contig_length) + "\n" + myline)
-                f.close()
+                create_new_fSAM(path_to_txt, contig_number, reference_genome, contig, contig_length, myline)
 
                 nexons +=1
                 contig_name_temporary = contig
 
             elif contig == contig_name_temporary:
-                f = open(path_to_assembled_exons + "/" + contig_number + "_" + reference_genome + ".txt", "a+")
-                f.write(myline)
-                f.close()
-#
-    f = open(path_to_assembled_exons + "/number_of_contigs_and_exons.txt", "w+")
-    f.write("Number of contigs: " + str(ncontigs) + "\nNumber of exons: " + str(nexons))
+                write_to_fSAM(path_to_txt, contig_number, reference_genome, myline)
 
-
-
-
+    count_save_stats(path_to_txt, ncontigs, nexons)
