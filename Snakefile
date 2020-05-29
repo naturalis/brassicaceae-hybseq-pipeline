@@ -1,4 +1,5 @@
-# SAMPLES = ["SRR8528337"] # variables for every species
+# variables for every species
+SAMPLES = ["SRR8528336", "SRR8528337"]
 
 #forward or reverse | paired or unpaired
 FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
@@ -8,6 +9,11 @@ CONTIGS_IN_DIR = 1905
 CONTIG_NRS = range(1, CONTIGS_IN_DIR+1)   #["1", "2", "3"]
 
 # all variables within snakemake
+raw_reads_forward_samples = expand("data/raw_reads/{samples}_1.fastq.gz", samples = SAMPLES)
+raw_reads_reverse_samples = expand("data/raw_reads/{samples}_2.fastq.gz", samples = SAMPLES)
+
+raw_reads_samples = expand("data/raw_reads/{samples}_count_reads.txt", samples = SAMPLES)
+
 deduplication_variables = expand("results/deduplicated_reads/SRR8528337/SRR8528337_{frpu}_dedupl.fq", frpu = FRPU)
 fsam_variables = expand("results/assembled_exons/SRR8528337/sam/Contig{nr}_AT.sam", nr = CONTIG_NRS)
 fbam_variables = expand("results/assembled_exons/SRR8528337/bam/Contig{nr}_AT.bam", nr = CONTIG_NRS)
@@ -18,7 +24,8 @@ var_variables = expand("results/assembled_exons/SRR8528337/var/Contig{nr}_AT_sor
 
 rule all:
     input:
-        deduplication_variables, fsam_variables, fbam_variables, sorted_fbam_variables, pileup_variables, var_variables
+        raw_reads_forward_samples, raw_reads_reverse_samples, deduplication_variables, fsam_variables, fbam_variables,
+         sorted_fbam_variables, pileup_variables, var_variables
 
 rule gunzip:
     input:
@@ -29,10 +36,10 @@ rule gunzip:
 
 rule count_raw_reads:
     input:
-        forward="data/raw_reads/SRR8528337_1.fastq",
-        reverse="data/raw_reads/SRR8528337_2.fastq"
+        forward="data/raw_reads/{samples}_1.fastq",
+        reverse="data/raw_reads/{samples}_2.fastq"
     output:
-        "data/raw_reads/SRR8528337_count_reads.txt"
+        "data/raw_reads/{samples}_count_reads.txt"
     shell:
         "echo $(cat {input.forward} | grep 'HISEQ' | wc -l) + $(cat {input.reverse} | grep 'HISEQ' | wc -l) | "
         "bc > {output}"
