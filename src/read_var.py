@@ -48,18 +48,36 @@ def create_dir(path):
         print("Directory " + path + " already exists")
 
 
+# Creates new file for whole consensus.txt
+def create_fconsensus(path):
+    f = open(path + "consensus.txt", "w+")
+    print("New text file created :" + path + "consensus.txt")
+    f.close()
+
+
 # Creates new txt file for consensus sequence
-def make_consensus(seq_length, contig_number, ncontigs_after_VARscan):
+def make_consensus(seq_length, path, contig_number, seq, ncontigs_after_VARscan):
     if seq_length > 0:
-        f = open(path_to_consensus_species_dir + "Contig" + str(contig_number) + ".txt", "w+")
-        print("New text file created: " + "Contig" + str(contig_number) + ".txt")
-        f.write(">Contig" + str(contig_number) + "\n" + seq + "\n")
-        f.close()
+        append_fconsensus(path, contig_number, seq)
+        create_fcontig_consensus(path, contig_number, seq)
         ncontigs_after_VARscan += 1
     else:
         print("Fasta file is not printed: " + "Contig" + str(contig_number) + ".txt")
 
     return ncontigs_after_VARscan
+
+
+def append_fconsensus(path, contig_number, seq):
+    f = open(path + "consensus.txt", "a+")
+    f.write(">Contig" + str(contig_number) + "\n" + seq + "\n")
+    f.close()
+
+
+def create_fcontig_consensus(path_to_consensus_species_dir, contig_number, seq):
+    f = open(path_to_consensus_species_dir + "Contig" + str(contig_number) + ".txt", "w+")
+    print("New text file created: " + "Contig" + str(contig_number) + ".txt")
+    f.write(">Contig" + str(contig_number) + "\n" + seq + "\n")
+    f.close()
 
 
 # Code starts here
@@ -69,6 +87,14 @@ dirs = os.listdir(path_to_assembled_exons_dir)
 for species_name in dirs:
     path_to_var_dir = path_to_assembled_exons_dir + species_name + "/var/"
     n_contig_files = count_contigs(path_to_var_dir)
+
+    # Create consensus directory en file for every species if it doesn't exist
+    path_to_consensus_dir = "./results/consensus/"
+    path_to_consensus_species_dir = path_to_consensus_dir + species_name + "/"
+
+    create_dir(path_to_consensus_dir)
+    create_dir(path_to_consensus_species_dir)
+    create_fconsensus(path_to_consensus_species_dir)
 
     # Loops through all contig files for each species
     ncontigs_after_VARscan = 0
@@ -81,14 +107,8 @@ for species_name in dirs:
         seq_length = len(seq)
         # print("seq length: " + str(seq_length))
 
-        # Create consensus directory for every species if it doesn't exist
-        path_to_consensus_dir = "./results/consensus/"
-        create_dir(path_to_consensus_dir)
-
-        path_to_consensus_species_dir = path_to_consensus_dir + species_name + "/"
-        create_dir(path_to_consensus_species_dir)
-
-        ncontigs_after_VARscan = make_consensus(seq_length, contig_number, ncontigs_after_VARscan)
+        ncontigs_after_VARscan = make_consensus(seq_length, path_to_consensus_species_dir, contig_number, seq,
+                                                ncontigs_after_VARscan)
 
     # Prints number of contig files created after VARscan (some files are empty after VARscan)
     print("contigs after VARscan: " + str(ncontigs_after_VARscan))
