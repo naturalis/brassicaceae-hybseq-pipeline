@@ -4,6 +4,7 @@
 # Date: 22 May 2020
 
 import os, fnmatch
+import re
 from Bio import SearchIO
 
 
@@ -13,16 +14,17 @@ def create_fout(path_to_fout):
     f.close()
 
 
-# reads psl file
+# checks if psl file is empty, if no: reads psl file
 def read_psl(path_to_psl):
-    # checks if psl file is empty
     with open(path_to_psl, 'rt') as myfile:
-        for myline in myfile:
-            if len(myline[1].strip()) == 0:
-                print(path_to_psl + " is empty")
-            else:
-                t_name_highest, q_name_highest, id_pct_highest, max_score = extract_hits(path_to_psl)
-                write_fout(path_to_fout, t_name_highest, q_name_highest, id_pct_highest, max_score)
+        nlines = 0
+        for every_line in myfile:
+            nlines += 1
+        if nlines <= 5:
+            print(path_to_psl + " is empty")
+        else:
+            t_name_highest, q_name_highest, id_pct_highest, max_score = extract_hits(path_to_psl)
+            write_fout(path_to_fout, t_name_highest, q_name_highest, id_pct_highest, max_score)
 
 
 # extract hits and returns the t_name, q_name, id_pct and score for highest hit from psl file per contig per species
@@ -62,6 +64,7 @@ create_fout(path_to_fout)
 # moet nog loopen over species
 path_to_psl_dir = "./results/blat/SRR8528336/"
 list_in_psl_dir = os.listdir(path_to_psl_dir)
+list_in_psl_dir.sort(key=lambda f: int(re.sub('\D', '', f)))
 pattern = "*.psl"
 
 # loops over psl files and read them one by one
