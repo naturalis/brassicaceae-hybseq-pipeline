@@ -20,13 +20,11 @@ def natural_sort(l):
     return sorted(l, key = alphanum_key)
 
 
-def create_dictionary_start_end(path_to_mapped_contigs):
-    dictionary = {}
-    with open(path_to_mapped_contigs) as f:
+def create_dictionary_start_end(path_to_list, dictionary):
+    with open(path_to_list) as f:
         for line in f:
-            (contig_name, contig_start, contig_end) = line.split()
-            dictionary[contig_name] = contig_start, contig_end
-    print(dictionary['>Contig1'])
+            (name, start, end) = line.split()
+            dictionary[name] = start, end
 
 
 # checks if psl file is empty, if no: reads psl file
@@ -82,9 +80,16 @@ list_in_psl_dir = os.listdir(path_to_psl_dir)
 list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
 pattern = "*.psl"
 
-# creates dictionary for mapped contigs with their start and end position
+# creates separate dictionary for mapped contigs and target exons with their start and end position
 path_to_mapped_contigs = './results/assembled_exons/SRR8528336/mapped_contigs.txt'
-create_dictionary_start_end(path_to_mapped_contigs)
+path_to_exons_enum = './data/exons/AT_exon_enum.txt'
+dictionary_contigs = {}
+dictionary_exons = {}
+create_dictionary_start_end(path_to_mapped_contigs, dictionary_contigs)
+create_dictionary_start_end(path_to_exons_enum, dictionary_exons)
+
+print(dictionary_exons['>AT1G01220.1@1'])
+print(dictionary_contigs['>Contig1'])
 
 # loops over psl files and read them one by one
 # parse the highest target name, query name, ID percentage and score
