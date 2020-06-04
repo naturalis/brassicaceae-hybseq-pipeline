@@ -20,6 +20,15 @@ def natural_sort(l):
     return sorted(l, key = alphanum_key)
 
 
+def create_dictionary_start_end(path_to_mapped_contigs):
+    dictionary = {}
+    with open(path_to_mapped_contigs) as f:
+        for line in f:
+            (contig_name, contig_start, contig_end) = line.split()
+            dictionary[contig_name] = contig_start, contig_end
+    print(dictionary['>Contig1'])
+
+
 # checks if psl file is empty, if no: reads psl file
 def read_psl(path_to_psl):
     with open(path_to_psl, 'rt') as myfile:
@@ -72,6 +81,10 @@ path_to_psl_dir = "./results/blat/SRR8528336/"
 list_in_psl_dir = os.listdir(path_to_psl_dir)
 list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
 pattern = "*.psl"
+
+# creates dictionary for mapped contigs with their start and end position
+path_to_mapped_contigs = './results/assembled_exons/SRR8528336/mapped_contigs.txt'
+create_dictionary_start_end(path_to_mapped_contigs)
 
 # loops over psl files and read them one by one
 # parse the highest target name, query name, ID percentage and score
