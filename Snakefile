@@ -5,7 +5,7 @@ SAMPLES = ["SRR8528336", "SRR8528337"]
 FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
 
 # variables within contigs: should be range(1, ALL CONTIG FILES IN DIR (FOR EVERY SPECIES))
-CONTIGS_IN_DIR = 1905
+CONTIGS_IN_DIR = 2113   #1905 for SRR8528337
 CONTIG_NRS = range(1, CONTIGS_IN_DIR+1)   #["1", "2", "3"]
 
 # all variables within snakemake
@@ -94,13 +94,10 @@ rule count_reads_deduplication:
 
 # reference mapping and de novo using YASRA/alignreads.py
 # make sure to: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads"
-# this rule to be changed into multiple rules within the alignreads.py
 rule alignreads:
     input:
         "results/deduplicated_reads/SRR8528336/SRR8528336_reads.fq",
         "data/reference_genomes/ref-at.fasta"
-        #"src/installed_alignreads/alignreads/YASRA-2.33/test_data/454.fa",
-        #"src/installed_alignreads/alignreads/YASRA-2.33/test_data/rhino_template.fa"
     shell:
         "alignreads {input} "
         "--single-step "
@@ -185,6 +182,14 @@ rule BLAT_assembled:
         "-minIdentity=0 "
         "{input} {output}"
 
+rule extract_hits_psl:
+    input:
+        "src/extract_hits_psl.py"
+    shell:
+        "python3 {input}"
+
+
+# SEQUENCE GENOMES
 # extract reads from sequence genomes
 rule extract_reads:
     input:
