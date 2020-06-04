@@ -16,10 +16,21 @@ def create_dir(path):
         print("Directory ", path, " already exists")
 
 
+def create_mapped_contig_list(path_to_final_assembly, path_to_species):
+    f = open(path_to_species + "mapped_contigs.txt", "w+")
+    print("New text file created: " + path_to_species + "mapped_contigs.txt")
+
+    with open(path_to_final_assembly, 'rt') as myfile:
+        for myline in myfile:
+            if myline.startswith('>'):
+                contig_name, ref_name, contig_start, contig_end = myline.split('_')
+                f.write(contig_name + contig_start + contig_end + '\n')
+    f.close()
+
+
 def create_new_fSAM(path_to_txt, contig_number, reference_genome, contig, contig_length, myline):
     f = open(path_to_txt + "/" + contig_number + "_" + reference_genome + ".txt", "w+")
     print("New text file created: " + contig_number + "_" + reference_genome)
-
     f.write("@HD\tVN:1.3\n@SQ\tSN:" + contig + "\tLN:" + str(contig_length) + "\n" + myline)
     f.close()
 
@@ -36,10 +47,11 @@ def count_save_stats(path_to_txt, ncontigs, nexons):
     f.close()
 
 
+# Code starts here
 # Creating paths for output directory
 # Deze paths moeten nog automatisch laten loopen, maar daarvoor moet eerst deze output directory naam gewijzigd worden
-path_to_YASRA_fSAM = './results/alignments/SRR8528336_reads.fq_ref-at.fasta_Mon-May-25-08:50:00-2020/' \
-                     'YASRA_related_files/alignments_SRR8528336_reads.fq_ref-at.fasta.sam'
+path_to_YASRA_dir = './results/alignments/SRR8528336_reads.fq_ref-at.fasta_Mon-May-25-08:50:00-2020/YASRA_related_files/'
+path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_SRR8528336_reads.fq_ref-at.fasta.sam'
 path_to_assembled_exons = './results/assembled_exons'
 path_to_species = path_to_assembled_exons + '/SRR8528336'
 path_to_txt = path_to_species + '/txt'
@@ -48,11 +60,15 @@ create_dir(path_to_assembled_exons)
 create_dir(path_to_species)
 create_dir(path_to_txt)
 
+# Creates assembled contig list and dictionary for start and end position
+path_to_final_assembly = path_to_YASRA_dir +'Final_Assembly_SRR8528336_reads.fq_ref-at.fasta'
 
+create_mapped_contig_list(path_to_final_assembly, path_to_species)
+
+# write new SAM files for every contig after YASRA
 ncontigs = 0
 nexons = 0
 contig_name_temporary = " "
-
 with open(path_to_YASRA_fSAM, 'rt') as myfile:
     for myline in myfile:
         if myline.startswith('>'):
