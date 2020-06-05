@@ -8,8 +8,8 @@ import re
 from Bio import SearchIO
 
 
-def create_fout(path_to_fout):
-    f = open(path_to_fout, "w+")
+def create_fhighest_hits(path_to_fhighest_hits):
+    f = open(path_to_fhighest_hits, "w+")
     f.write("target_name\tquery_name\tpercent_ID\tPSL_score\n")
     f.close()
 
@@ -20,12 +20,14 @@ def natural_sort(l):
     return sorted(l, key = alphanum_key)
 
 
-def create_dictionary_start_end(path_to_list, dictionary):
+def create_dictionary_start_end(path_to_list):
+    dictionary = {}
     with open(path_to_list) as f:
         for line in f:
             (name, start, end) = line.split()
             dictionary[name] = start, end
     f.close()
+    dictionary = natural_sort(dictionary)
     return dictionary
 
 
@@ -56,7 +58,7 @@ def read_psl(path_to_psl):
             print(path_to_psl + " is empty")
         else:
             t_name_highest, q_name_highest, id_pct_highest, max_score = extract_hits(path_to_psl)
-            write_fout(path_to_fout, t_name_highest, q_name_highest, id_pct_highest, max_score)
+            write_fhighest_hits(path_to_fhighest_hits, t_name_highest, q_name_highest, id_pct_highest, max_score)
 
 
 # extract hits and returns the t_name, q_name, id_pct and score for highest hit from psl file per contig per species
@@ -82,28 +84,33 @@ def extract_hits(path_to_psl):
 
 
 # add highest BLAT scored exons hits per contig per species in highest_hits.txt file
-def write_fout(path_to_fout, t_name_highest, q_name_highest, id_pct_highest, max_score):
-    f = open(path_to_fout, "a+")
+def write_fhighest_hits(path_to_fhighest_hits, t_name_highest, q_name_highest, id_pct_highest, max_score):
+    f = open(path_to_fhighest_hits, "a+")
     f.write(t_name_highest + "\t" + q_name_highest + "\t" + str(id_pct_highest) + "\t" + str(max_score) + "\n")
     f.close()
 
 
+# Create directory of given path if it doesn't exist
+def create_dir(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+        print("Directory ", path, " Created ")
+    else:
+        print("Directory ", path, " already exists")
+
+
 # # # Code starts here:
 # creates a new empty highest_hits.txt file
-path_to_fout = "./results/blat/SRR8528336/highest_hits.txt"
-create_fout(path_to_fout)
+path_to_fhighest_hits = "./results/blat/SRR8528336/highest_hits.txt"
+create_fhighest_hits(path_to_fhighest_hits)
 
 # creates separate dictionary for mapped contigs with their start and end position
 path_to_mapped_contigs = './results/assembled_exons/SRR8528336/mapped_contigs.txt'
-dictionary_contigs = {}
-dictionary_contigs = create_dictionary_start_end(path_to_mapped_contigs, dictionary_contigs)
-sorted_dictionary_contigs = natural_sort(dictionary_contigs)
+dictionary_contigs = create_dictionary_start_end(path_to_mapped_contigs)
 
 # creates separate dictionary for target exons with their start and end position
 path_to_exons_enum = './data/exons/AT_exon_enum.txt'
-dictionary_exons = {}
-dictionary_exons = create_dictionary_start_end(path_to_exons_enum, dictionary_exons)
-sorted_dictionary_exons = natural_sort(dictionary_exons)
+dictionary_exons = create_dictionary_start_end(path_to_exons_enum)
 
 # create an empty contig_exon_match_list.txt
 path_to_contig_exon_match = "./results/assembled_exons/SRR8528336/contig_exon_match_list.txt"
@@ -112,7 +119,7 @@ f.close()
 
 # checks which mapped contig starting and ending position matches with exons starting and ending position
 # and puts the matching pairs in contig_exon_match_list.txt
-check_overlap(sorted_dictionary_contigs, sorted_dictionary_exons)
+check_overlap(dictionary_contigs, dictionary_exons)
 
 # loops over psl files in the psl dir
 # moet nog loopen over species
@@ -130,4 +137,50 @@ for entry in list_in_psl_dir_sorted:
         path_to_psl = path_to_psl_dir + psl_file
         read_psl(path_to_psl)
 
+# create dictionary for highest_hits contig_exon match pairs
+with open(path_to_fhighest_hits, 'rt') as myfile:
+    for line in myfile:
+        dictionary_match = {}
+        if not line.startswith('target_name'):
+            (contig_name, exon_name, percent_ID, PSL_score) = line.split('\t')
+            dictionary_match[contig_name] = exon_name
+dictionary_match = natural_sort(dictionary_match)
+
+# create dictionary for contig_exon_match pairs
+with open(path_to_contig_exon_match, 'rt') as myfile:
+    dictionary_hits = {}
+    for line in myfile:
+        (contig_name, exon_name) = line.split('\t')
+        dictionary_hits[contig_name] = exon_name
+dictionary_hits = natural_sort(dictionary_hits)
+
+# create new MAFFT dir for input
+path_to_mafft = './results/mafft/'
+create_dir(path_to_mafft)
+
+# checks if contig-exon pairs in highest_hits.txt are present in contig_exon_match_list.txt
+# if yes, creates new exon_name.fasta file with contig consensus sequence for MAFFT
+path_to_consensus_dir = './results/consensus/SRR8528336/'
+list_consensus_dir = os.listdir(path_to_consensus_dir)
+sorted_list_consensus_dir = natural_sort(list_consensus_dir)
+for hits in dictionary_hits:
+    for matches in dictionary_match:
+        if hits[contig_name] == matches[contig_name]:
+            if hits[exon_name] == matches[exon_name]:
+                # maakt nieuwe exon_name.fasta aan in MAFFT dir met de contigs
+                exon_file = open(path_to_mafft + exon_name + '.txt', "w+")
+                exon_file.close()
+                for contig_name_file in sorted_list_consensus_dir:
+                    # zoekt naar bijbehorende consensus contig seq
+                    if hits[contig_name] == contig_name_file:
+                        contig_file = open(path_to_consensus_dir + contig_name + '.txt', 'rt')
+                        for line in contig_file:
+                            exon_file = open(path_to_mafft + exon_name + '.txt', "a+")
+                            exon_file.write(line)
+                        contig_file.close()
+                    exon_file.close()
+            else:
+                print("not present in contig_exon_match_list.txt")
+        else:
+            print("not present in contig_exon_match_list.txt")
 
