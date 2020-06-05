@@ -8,6 +8,8 @@ import re
 from Bio import SearchIO
 
 SPECIES = 'SRR8528336'
+ID_PCT_CUTOFF = 75
+SCORE_CUTOFF = 20
 
 
 def create_fhighest_hits(path_to_fhighest_hits):
@@ -60,6 +62,15 @@ def read_psl(path_to_psl):
         else:
             t_name_highest, q_name_highest, id_pct_highest, max_score = extract_hits(path_to_psl)
             write_fhighest_hits(path_to_fhighest_hits, t_name_highest, q_name_highest, id_pct_highest, max_score)
+
+
+def check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered):
+    with open(path_to_fhighest_hits, 'rt') as myfile:
+        for line in myfile:
+            t_name_highest, q_name_highest, id_pct_highest, max_score = line.split()
+            if id_pct_highest >= ID_PCT_CUTOFF and max_score >= SCORE_CUTOFF:
+                write_fhighest_hits(path_to_fhighest_hits_filtered, t_name_highest, q_name_highest, id_pct_highest,
+                                    max_score)
 
 
 # extract hits and returns the t_name, q_name, id_pct and score for highest hit from psl file per contig per species
@@ -131,6 +142,10 @@ list_in_psl_dir = os.listdir(path_to_psl_dir)
 list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
 pattern = "*.psl"
 
+# create new file for filtered highest hits based on cutoffs
+path_to_fhighest_hits_filtered = "./results/blat/" + SPECIES + "highest_hits_filtered.txt"
+create_fhighest_hits(path_to_fhighest_hits_filtered)
+
 # read the psl files one by one
 # parse the highest target name, query name, ID percentage and score
 # paste them in a file called highest_hits.txt for every species
@@ -139,26 +154,24 @@ for entry in list_in_psl_dir_sorted:
         psl_file = entry
         path_to_psl = path_to_psl_dir + psl_file
         read_psl(path_to_psl)
+        check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered)
 
-### tot hier gaat het goed
-### is een dictionary wel nodig hiervoor?
-
-# create dictionary for highest_hits contig_exon match pairs
-with open(path_to_fhighest_hits, 'rt') as myfile:
+# create dictionary for highest_hits_filtered contig_exon match pairs
+with open(path_to_fhighest_hits_filtered, 'rt') as myfile:
+    dictionary_hits = {}
     for line in myfile:
-        dictionary_match = {}
         if not line.startswith('target_name'):
             (contig_name, exon_name, percent_ID, PSL_score) = line.split('\t')
-            dictionary_match[contig_name] = exon_name
-dictionary_match_sorted = natural_sort(dictionary_match)
+            dictionary_hits[contig_name] = exon_name
+dictionary_hits_sorted = natural_sort(dictionary_hits)
 
 # create dictionary for contig_exon_match pairs
 with open(path_to_contig_exon_match, 'rt') as myfile:
-    dictionary_hits = {}
+    dictionary_match = {}
     for line in myfile:
         (contig_name, exon_name) = line.split('\t')
-        dictionary_hits[contig_name] = exon_name
-dictionary_hits_sorted = natural_sort(dictionary_hits)
+        dictionary_match[contig_name] = exon_name
+dictionary_match_sorted = natural_sort(dictionary_match)
 
 # create new MAFFT dir for input
 path_to_mafft = './results/mafft/'
@@ -173,23 +186,25 @@ path_to_consensus_dir = "./results/consensus/" + SPECIES + "/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_list_consensus_dir = natural_sort(list_consensus_dir)
 
-for hits in dictionary_hits_sorted:
-    for matches in dictionary_match_sorted:
-        if dictionary_hits[contig_name] == dictionary_match[contig_name]:
-            if dictionary_hits[exon_name] == dictionary_match[exon_name]:
+for hit_contig in dictionary_hits_sorted:
+    for match_contig in dictionary_match_sorted:
+        if hit_contig == match_contig:
+            if dictionary_hits[hit_contig].strip() == dictionary_match[match_contig].strip():
                 # maakt nieuwe exon_name.fasta aan in MAFFT dir met de contigs
+                exon_name = dictionary_hits[hit_contig].strip()
                 exon_file = open(path_to_mafft_species_dir + exon_name + '.txt', "w+")
                 exon_file.close()
                 print(path_to_mafft_species_dir + exon_name + ".txt is created")
                 for contig_name_file in sorted_list_consensus_dir:
+                    contig_name, txt = contig_name_file.split('.')
                     # zoekt naar bijbehorende consensus contig seq
-                    if dictionary_hits[contig_name] == contig_name_file:
-                        contig_file = open(path_to_consensus_dir + contig_name + '.txt', 'rt')
-                        for line in contig_file:
-                            exon_file = open(path_to_mafft + exon_name + '.txt', "a+")
+                    if hit_contig == contig_name:
+                        contig_consensus_file = open(path_to_consensus_dir + contig_name + '.txt', 'rt')
+                        exon_file = open(path_to_mafft_species_dir + exon_name + '.txt', "a+")
+                        for line in contig_consensus_file:
                             exon_file.write(line)
-                        contig_file.close()
-                    exon_file.close()
+                        contig_consensus_file.close()
+                        exon_file.close()
             else:
                 print("pair not present in contig_exon_match_list.txt")
         else:
