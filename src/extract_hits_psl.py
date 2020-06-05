@@ -7,13 +7,14 @@ import os, fnmatch
 import re
 from Bio import SearchIO
 
+# moet nog loopen over species
 SPECIES = 'SRR8528336'
 ID_PCT_CUTOFF = 75
 SCORE_CUTOFF = 20
 
 
-def create_fhighest_hits(path_to_fhighest_hits):
-    f = open(path_to_fhighest_hits, "w+")
+def create_fhits(path_to_fhits):
+    f = open(path_to_fhits, "w+")
     f.write("target_name\tquery_name\tpercent_ID\tPSL_score\n")
     f.close()
 
@@ -67,7 +68,7 @@ def read_psl(path_to_psl):
 def check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered):
     with open(path_to_fhighest_hits, 'rt') as myfile:
         for line in myfile:
-            t_name_highest, q_name_highest, id_pct_highest, max_score = line.split()
+            t_name_highest, q_name_highest, id_pct_highest, max_score = line.split("\t")
             if id_pct_highest >= ID_PCT_CUTOFF and max_score >= SCORE_CUTOFF:
                 write_fhighest_hits(path_to_fhighest_hits_filtered, t_name_highest, q_name_highest, id_pct_highest,
                                     max_score)
@@ -114,7 +115,7 @@ def create_dir(path):
 # # # Code starts here:
 # creates a new empty highest_hits.txt file
 path_to_fhighest_hits = "./results/blat/" + SPECIES + "/highest_hits.txt"
-create_fhighest_hits(path_to_fhighest_hits)
+create_fhits(path_to_fhighest_hits)
 
 # creates separate dictionary for mapped contigs with their start and end position
 path_to_mapped_contigs = "./results/assembled_exons/" + SPECIES + "/mapped_contigs.txt"
@@ -136,7 +137,6 @@ f.close()
 check_overlap(dictionary_contigs_sorted, dictionary_exons_sorted)
 
 # loops over psl files in the psl dir
-# moet nog loopen over species
 path_to_psl_dir = "./results/blat/" + SPECIES + "/"
 list_in_psl_dir = os.listdir(path_to_psl_dir)
 list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
@@ -144,7 +144,7 @@ pattern = "*.psl"
 
 # create new file for filtered highest hits based on cutoffs
 path_to_fhighest_hits_filtered = "./results/blat/" + SPECIES + "highest_hits_filtered.txt"
-create_fhighest_hits(path_to_fhighest_hits_filtered)
+create_fhits(path_to_fhighest_hits_filtered)
 
 # read the psl files one by one
 # parse the highest target name, query name, ID percentage and score
@@ -205,8 +205,8 @@ for hit_contig in dictionary_hits_sorted:
                             exon_file.write(line)
                         contig_consensus_file.close()
                         exon_file.close()
-            else:
-                print("pair not present in contig_exon_match_list.txt")
-        else:
-            print("contig not present in contig_exon_match_list.txt")
+        #     else:
+        #         print("pair not present in contig_exon_match_list.txt")
+        # else:
+        #     print("contig not present in contig_exon_match_list.txt")
 
