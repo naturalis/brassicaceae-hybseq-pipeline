@@ -25,6 +25,7 @@ def create_mapped_contig_list(path_to_final_assembly, path_to_mapped_contigs):
         for myline in myfile:
             if myline.startswith('>'):
                 contig_name, ref_name, contig_start, contig_end = myline.split('_')
+                symbol, contig_name = contig_name.split('>')
                 f.write(contig_name + "\t" + contig_start + "\t" + contig_end)
     f.close()
 
