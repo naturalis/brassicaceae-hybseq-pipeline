@@ -66,12 +66,17 @@ def read_psl(path_to_psl):
 
 
 def check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered):
-    with open(path_to_fhighest_hits, 'rt') as myfile:
+    with open(path_to_fhighest_hits, 'r') as myfile:
         for line in myfile:
-            t_name_highest, q_name_highest, id_pct_highest, max_score = line.split("\t")
-            if id_pct_highest >= ID_PCT_CUTOFF and max_score >= SCORE_CUTOFF:
-                write_fhighest_hits(path_to_fhighest_hits_filtered, t_name_highest, q_name_highest, id_pct_highest,
-                                    max_score)
+            if not line.startswith('target_name'):
+                t_name_highest, q_name_highest, id_pct_highest, max_score = line.split("\t")
+                if float(id_pct_highest) >= ID_PCT_CUTOFF and float(max_score) > SCORE_CUTOFF:
+                    print("yay, id percentage and score are higher than cutoffs. id perc: " + id_pct_highest + " score: " + max_score)
+                    filtered_hits_file = open(path_to_fhighest_hits_filtered, "a+")
+                    filtered_hits_file.write(line)
+                    filtered_hits_file.close()
+                else:
+                    print("boo, its below cutoff. Id perc: " + id_pct_highest + " score " + max_score)
 
 
 # extract hits and returns the t_name, q_name, id_pct and score for highest hit from psl file per contig per species
@@ -143,7 +148,7 @@ list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
 pattern = "*.psl"
 
 # create new file for filtered highest hits based on cutoffs
-path_to_fhighest_hits_filtered = "./results/blat/" + SPECIES + "highest_hits_filtered.txt"
+path_to_fhighest_hits_filtered = "./results/blat/" + SPECIES + "/highest_hits_filtered.txt"
 create_fhits(path_to_fhighest_hits_filtered)
 
 # read the psl files one by one
@@ -154,7 +159,8 @@ for entry in list_in_psl_dir_sorted:
         psl_file = entry
         path_to_psl = path_to_psl_dir + psl_file
         read_psl(path_to_psl)
-        check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered)
+
+check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered)
 
 # create dictionary for highest_hits_filtered contig_exon match pairs
 with open(path_to_fhighest_hits_filtered, 'rt') as myfile:
