@@ -27,16 +27,15 @@ def create_dictionary_start_end(path_to_list):
             (name, start, end) = line.split()
             dictionary[name] = start, end
     f.close()
-    dictionary = natural_sort(dictionary)
     return dictionary
 
 
-def check_overlap(sorted_dictionary_contigs, sorted_dictionary_exons):
-    for contig in sorted_dictionary_contigs:
+def check_overlap(dictionary_contigs_sorted, dictionary_exons_sorted):
+    for contig in dictionary_contigs_sorted:
         contig_start = dictionary_contigs[contig][0]
         contig_end = dictionary_contigs[contig][1]
 
-        for exon in sorted_dictionary_exons:
+        for exon in dictionary_exons_sorted:
             exon_start = dictionary_exons[exon][0]
             exon_end = dictionary_exons[exon][1]
 
@@ -107,10 +106,12 @@ create_fhighest_hits(path_to_fhighest_hits)
 # creates separate dictionary for mapped contigs with their start and end position
 path_to_mapped_contigs = './results/assembled_exons/SRR8528336/mapped_contigs.txt'
 dictionary_contigs = create_dictionary_start_end(path_to_mapped_contigs)
+dictionary_contigs_sorted = natural_sort(dictionary_contigs)
 
 # creates separate dictionary for target exons with their start and end position
 path_to_exons_enum = './data/exons/AT_exon_enum.txt'
 dictionary_exons = create_dictionary_start_end(path_to_exons_enum)
+dictionary_exons_sorted = natural_sort(dictionary_exons)
 
 # create an empty contig_exon_match_list.txt
 path_to_contig_exon_match = "./results/assembled_exons/SRR8528336/contig_exon_match_list.txt"
@@ -119,7 +120,7 @@ f.close()
 
 # checks which mapped contig starting and ending position matches with exons starting and ending position
 # and puts the matching pairs in contig_exon_match_list.txt
-check_overlap(dictionary_contigs, dictionary_exons)
+check_overlap(dictionary_contigs_sorted, dictionary_exons_sorted)
 
 # loops over psl files in the psl dir
 # moet nog loopen over species
