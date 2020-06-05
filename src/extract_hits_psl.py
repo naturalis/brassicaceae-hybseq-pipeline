@@ -7,6 +7,8 @@ import os, fnmatch
 import re
 from Bio import SearchIO
 
+SPECIES = 'SRR8528336'
+
 
 def create_fhighest_hits(path_to_fhighest_hits):
     f = open(path_to_fhighest_hits, "w+")
@@ -43,7 +45,7 @@ def check_overlap(dictionary_contigs_sorted, dictionary_exons_sorted):
             if exon_start <= contig_start <= exon_end or exon_start <= contig_end <= exon_end or \
                     contig_start <= exon_start <= contig_end or contig_start <= exon_end <= contig_end:
                 f = open(path_to_contig_exon_match, "a+")
-                f.write(contig + ' ' + exon + '\n')
+                f.write(contig + '\t' + exon + '\n')
                 f.close()
 
 
@@ -100,21 +102,21 @@ def create_dir(path):
 
 # # # Code starts here:
 # creates a new empty highest_hits.txt file
-path_to_fhighest_hits = "./results/blat/SRR8528336/highest_hits.txt"
+path_to_fhighest_hits = "./results/blat/" + SPECIES + "/highest_hits.txt"
 create_fhighest_hits(path_to_fhighest_hits)
 
 # creates separate dictionary for mapped contigs with their start and end position
-path_to_mapped_contigs = './results/assembled_exons/SRR8528336/mapped_contigs.txt'
+path_to_mapped_contigs = "./results/assembled_exons/" + SPECIES + "/mapped_contigs.txt"
 dictionary_contigs = create_dictionary_start_end(path_to_mapped_contigs)
 dictionary_contigs_sorted = natural_sort(dictionary_contigs)
 
 # creates separate dictionary for target exons with their start and end position
-path_to_exons_enum = './data/exons/AT_exon_enum.txt'
+path_to_exons_enum = "./data/exons/AT_exon_enum.txt"
 dictionary_exons = create_dictionary_start_end(path_to_exons_enum)
 dictionary_exons_sorted = natural_sort(dictionary_exons)
 
 # create an empty contig_exon_match_list.txt
-path_to_contig_exon_match = "./results/assembled_exons/SRR8528336/contig_exon_match_list.txt"
+path_to_contig_exon_match = "./results/assembled_exons/" + SPECIES + "/contig_exon_match_list.txt"
 f = open(path_to_contig_exon_match, "w+")
 f.close()
 
@@ -124,7 +126,7 @@ check_overlap(dictionary_contigs_sorted, dictionary_exons_sorted)
 
 # loops over psl files in the psl dir
 # moet nog loopen over species
-path_to_psl_dir = "./results/blat/SRR8528336/"
+path_to_psl_dir = "./results/blat/" + SPECIES + "/"
 list_in_psl_dir = os.listdir(path_to_psl_dir)
 list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
 pattern = "*.psl"
@@ -138,6 +140,9 @@ for entry in list_in_psl_dir_sorted:
         path_to_psl = path_to_psl_dir + psl_file
         read_psl(path_to_psl)
 
+### tot hier gaat het goed
+### is een dictionary wel nodig hiervoor?
+
 # create dictionary for highest_hits contig_exon match pairs
 with open(path_to_fhighest_hits, 'rt') as myfile:
     for line in myfile:
@@ -145,7 +150,7 @@ with open(path_to_fhighest_hits, 'rt') as myfile:
         if not line.startswith('target_name'):
             (contig_name, exon_name, percent_ID, PSL_score) = line.split('\t')
             dictionary_match[contig_name] = exon_name
-dictionary_match = natural_sort(dictionary_match)
+dictionary_match_sorted = natural_sort(dictionary_match)
 
 # create dictionary for contig_exon_match pairs
 with open(path_to_contig_exon_match, 'rt') as myfile:
@@ -153,27 +158,32 @@ with open(path_to_contig_exon_match, 'rt') as myfile:
     for line in myfile:
         (contig_name, exon_name) = line.split('\t')
         dictionary_hits[contig_name] = exon_name
-dictionary_hits = natural_sort(dictionary_hits)
+dictionary_hits_sorted = natural_sort(dictionary_hits)
 
 # create new MAFFT dir for input
 path_to_mafft = './results/mafft/'
+path_to_mafft_species_dir = path_to_mafft + SPECIES + "/"
 create_dir(path_to_mafft)
+create_dir(path_to_mafft_species_dir)
+
 
 # checks if contig-exon pairs in highest_hits.txt are present in contig_exon_match_list.txt
 # if yes, creates new exon_name.fasta file with contig consensus sequence for MAFFT
-path_to_consensus_dir = './results/consensus/SRR8528336/'
+path_to_consensus_dir = "./results/consensus/" + SPECIES + "/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_list_consensus_dir = natural_sort(list_consensus_dir)
-for hits in dictionary_hits:
-    for matches in dictionary_match:
-        if hits[contig_name] == matches[contig_name]:
-            if hits[exon_name] == matches[exon_name]:
+
+for hits in dictionary_hits_sorted:
+    for matches in dictionary_match_sorted:
+        if dictionary_hits[contig_name] == dictionary_match[contig_name]:
+            if dictionary_hits[exon_name] == dictionary_match[exon_name]:
                 # maakt nieuwe exon_name.fasta aan in MAFFT dir met de contigs
-                exon_file = open(path_to_mafft + exon_name + '.txt', "w+")
+                exon_file = open(path_to_mafft_species_dir + exon_name + '.txt', "w+")
                 exon_file.close()
+                print(path_to_mafft_species_dir + exon_name + ".txt is created")
                 for contig_name_file in sorted_list_consensus_dir:
                     # zoekt naar bijbehorende consensus contig seq
-                    if hits[contig_name] == contig_name_file:
+                    if dictionary_hits[contig_name] == contig_name_file:
                         contig_file = open(path_to_consensus_dir + contig_name + '.txt', 'rt')
                         for line in contig_file:
                             exon_file = open(path_to_mafft + exon_name + '.txt', "a+")
@@ -181,7 +191,7 @@ for hits in dictionary_hits:
                         contig_file.close()
                     exon_file.close()
             else:
-                print("not present in contig_exon_match_list.txt")
+                print("pair not present in contig_exon_match_list.txt")
         else:
-            print("not present in contig_exon_match_list.txt")
+            print("contig not present in contig_exon_match_list.txt")
 
