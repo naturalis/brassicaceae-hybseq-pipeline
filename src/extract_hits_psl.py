@@ -118,11 +118,11 @@ def create_dir(path):
         print("Directory ", path, " already exists")
 
 
-# # creates new file
-# def create_ftxt(path):
-#     txt_file = open(path + '.txt', "w+")
-#     txt_file.close()
-#     print(path + ".txt is created")
+# creates new file
+def create_ftxt(path):
+    txt_file = open(path + '.txt', "w+")
+    txt_file.close()
+    print(path + ".txt is created")
 
 
 # checks if contig-exon pairs in highest_hits_filtered.txt are present in contig_exon_match_list.txt
@@ -137,7 +137,7 @@ def check_overlap_hit_pairs(dictionary_hits_sorted, dictionary_match_sorted, dic
                 exon_name_fmatch = dictionary_match[contig_name_fmatch].strip()
                 if exon_name_fhit == exon_name_fmatch:
                     path_to_mafft_fexon = path_to_mafft_species_dir + exon_name_fhit
-                    # create_ftxt(path_to_mafft_fexon)
+                    create_ftxt(path_to_mafft_fexon)
                     # read and write matching consensus sequence in new text file
                     write_ffasta(list_consensus_dir, contig_name_fhit, path_to_consensus_dir, path_to_mafft_fexon)
                     # write all contig-exon pairs in fseq_exons
@@ -157,7 +157,7 @@ def write_ffasta(list_consensus_dir, contig_name_fhit, path_to_consensus_dir, pa
 
         if contig_name_fhit == contig_name:
             contig_consensus_file = open(path_to_consensus_dir + contig_name + '.txt', 'rt')
-            exon_file = open(path_to_mafft_fexon, "a+")
+            exon_file = open(path_to_mafft_fexon, "w+")
             for line in contig_consensus_file:
                 exon_file.write(line)
             contig_consensus_file.close()
@@ -209,7 +209,7 @@ for entry in list_in_psl_dir_sorted:
 
 # create file with matches with PID/score < cutoffs
 path_to_fbelow_cutoff = path_to_psl_dir + "below_cutoff_pairs.txt"
-# create_ftxt(path_to_fbelow_cutoff)
+create_ftxt(path_to_fbelow_cutoff)
 check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered, path_to_fbelow_cutoff)
 
 # create dictionary for highest_hits_filtered contig_exon match pairs
@@ -240,8 +240,8 @@ create_dir(path_to_mafft_stats)
 # create statistical files
 path_to_fseq_exons = path_to_mafft_stats + "sequenced_exons.txt"
 path_to_fno_match_pairs = path_to_mafft_stats + "no_match_pairs.txt"
-# create_ftxt(path_to_fseq_exons)
-# create_ftxt(path_to_fno_match_pairs)
+create_ftxt(path_to_fseq_exons)
+create_ftxt(path_to_fno_match_pairs)
 
 # prepare fasta files for MAFFT
 path_to_consensus_dir = "./results/consensus/" + SPECIES + "/"
