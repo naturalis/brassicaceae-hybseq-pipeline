@@ -45,8 +45,8 @@ def check_overlap(dictionary_contigs_sorted, dictionary_exons_sorted):
             exon_end = dictionary_exons[exon][1]
 
             # checks if overlap, if yes then writes contig exon pair in contig_exon_match_list.txt
-            if exon_start <= contig_start <= exon_end or exon_start <= contig_end <= exon_end or \
-                    contig_start <= exon_start <= contig_end or contig_start <= exon_end <= contig_end:
+            if (exon_start <= contig_start <= exon_end) or (exon_start <= contig_end <= exon_end) or \
+                    (contig_start <= exon_start <= contig_end) or (contig_start <= exon_end <= contig_end):
                 f = open(path_to_contig_exon_match, "a+")
                 f.write(contig + '\t' + exon + '\n')
                 f.close()
@@ -185,12 +185,33 @@ path_to_mafft_species_dir = path_to_mafft + SPECIES + "/"
 create_dir(path_to_mafft)
 create_dir(path_to_mafft_species_dir)
 
-
 # checks if contig-exon pairs in highest_hits.txt are present in contig_exon_match_list.txt
 # if yes, creates new exon_name.fasta file with contig consensus sequence for MAFFT
 path_to_consensus_dir = "./results/consensus/" + SPECIES + "/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_list_consensus_dir = natural_sort(list_consensus_dir)
+
+
+# creates new directory for stats files
+path_to_mafft_stats = path_to_mafft_species_dir + "stats/"
+create_dir(path_to_mafft_stats)
+
+# one for seq_exons
+path_to_fseq_exons = path_to_mafft_stats + "sequenced_exons.txt"
+f = open(path_to_fseq_exons, "w+")
+#f.write(n_seq_exons)
+f.close()
+
+# one for pairs not in matched
+path_to_fno_overlap = path_to_mafft_stats + "no_overlap_pairs.txt"
+f = open(path_to_fno_overlap, "w+")
+f.close()
+
+# one for "errors" PID/score < cutoffs
+path_to_fbelow_cutoff = path_to_mafft_stats + "below_cutoff_pairs.txt"
+f = open(path_to_fbelow_cutoff, "w+")
+#f.write(n_below)
+f.close()
 
 for hit_contig in dictionary_hits_sorted:
     for match_contig in dictionary_match_sorted:
@@ -211,8 +232,9 @@ for hit_contig in dictionary_hits_sorted:
                             exon_file.write(line)
                         contig_consensus_file.close()
                         exon_file.close()
-        #     else:
-        #         print("pair not present in contig_exon_match_list.txt")
+             #else:
+                 # print pair die niet present is in path_to_fno_overlap
+                 #print("pair not present in contig_exon_match_list.txt")
         # else:
         #     print("contig not present in contig_exon_match_list.txt")
 
