@@ -7,8 +7,7 @@ import os, fnmatch
 import re
 from Bio import SearchIO
 
-# moet nog loopen over species
-SPECIES = 'SRR8528336'
+PSL_HEADER_LINES = 5
 ID_PCT_CUTOFF = 75
 SCORE_CUTOFF = 20
 
@@ -21,8 +20,14 @@ def create_fhits(path_to_fhits):
 
 def natural_sort(l):
     convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
-    return sorted(l, key=alphanum_key)
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+    return sorted(l, key = alphanum_key)
+
+
+def create_ftxt(path):
+    f = open(path, "w+")
+    f.close()
+    print(path + " is created")
 
 
 def create_dictionary_start_end(path_to_list):
@@ -35,12 +40,12 @@ def create_dictionary_start_end(path_to_list):
     return dictionary
 
 
-def check_overlap(dictionary_contigs_sorted, dictionary_exons_sorted):
-    for contig in dictionary_contigs_sorted:
+def check_overlap(dictionary_contigs_lsorted, dictionary_exons_lsorted, path_to_contig_exon_match):
+    for contig in dictionary_contigs_lsorted:
         contig_start = int(dictionary_contigs[contig][0])
         contig_end = int(dictionary_contigs[contig][1])
 
-        for exon in dictionary_exons_sorted:
+        for exon in dictionary_exons_lsorted:
             exon_start = int(dictionary_exons[exon][0])
             exon_end = int(dictionary_exons[exon][1])
 
@@ -58,26 +63,11 @@ def read_psl(path_to_psl):
         nlines = 0
         for every_line in myfile:
             nlines += 1
-        if nlines <= 5:
+        if nlines <= PSL_HEADER_LINES:
             print(path_to_psl + " is empty")
         else:
             t_name_highest, q_name_highest, id_pct_highest, max_score = extract_hits(path_to_psl)
             write_fhighest_hits(path_to_fhighest_hits, t_name_highest, q_name_highest, id_pct_highest, max_score)
-
-
-def check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered, path_to_fbelow_cutoff):
-    with open(path_to_fhighest_hits, 'r') as myfile:
-        for line in myfile:
-            if not line.startswith('target_name'):
-                t_name, q_name, id_pct, score = line.split("\t")
-                if float(id_pct) >= ID_PCT_CUTOFF and float(score) > SCORE_CUTOFF:
-                    filtered_hits_file = open(path_to_fhighest_hits_filtered, "a+")
-                    filtered_hits_file.write(line)
-                    filtered_hits_file.close()
-                else:
-                    fbelow_cutoff = open(path_to_fbelow_cutoff, "a+")
-                    fbelow_cutoff.write(t_name + "\t" + q_name)
-                    fbelow_cutoff.close()
 
 
 # extract hits and returns the t_name, q_name, id_pct and score for highest hit from psl file per contig per species
@@ -89,9 +79,9 @@ def extract_hits(path_to_psl):
     q_name_highest = ""
     id_pct_highest = 0
     max_score = 0
-    for hit in range(n_hits):  # loops over hits
+    for hit in range(n_hits):
         n_hsp_hits = len(qresult[hit])
-        for n in range(n_hsp_hits):  # loops over hsp
+        for n in range(n_hsp_hits):
             blat_hsp = qresult[hit][n]
             if blat_hsp.score > max_score:
                 t_name_highest = qresult.id
@@ -102,11 +92,49 @@ def extract_hits(path_to_psl):
     return t_name_highest, q_name_highest, id_pct_highest, max_score
 
 
-# add highest BLAT scored exons hits per contig per species in highest_hits.txt file
+# add highest BLAT scored exons hits per contig per species_name in highest_hits.txt file
 def write_fhighest_hits(path_to_fhighest_hits, t_name_highest, q_name_highest, id_pct_highest, max_score):
     f = open(path_to_fhighest_hits, "a+")
     f.write(t_name_highest + "\t" + q_name_highest + "\t" + str(id_pct_highest) + "\t" + str(max_score) + "\n")
     f.close()
+
+
+def check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered, path_to_fbelow_cutoff):
+    with open(path_to_fhighest_hits, 'r') as myfile:
+        for line in myfile:
+            if not line.startswith('target_name'):
+                t_name_highest, q_name_highest, id_pct_highest, max_score = line.split("\t")
+                if float(id_pct_highest) >= ID_PCT_CUTOFF and float(max_score) > SCORE_CUTOFF:
+                    write_line(path_to_fhighest_hits_filtered, line)
+                else:
+                    write_line(path_to_fbelow_cutoff, line)
+
+
+def write_line(path, line):
+    f = open(path, "a+")
+    f.write(line)
+    f.close()
+
+
+# create dictionary for highest_hits_filtered contig_exon match pairs
+def create_dictionary_highest_hits_filtered(path_to_fhighest_hits_filtered):
+    dictionary_hits = {}
+    with open(path_to_fhighest_hits_filtered, 'rt') as myfile:
+        for line in myfile:
+            if not line.startswith('target_name'):
+                (contig_name, exon_name, percent_ID, PSL_score) = line.split('\t')
+                dictionary_hits[contig_name] = exon_name
+    return dictionary_hits
+
+
+# create dictionary for contig_exon_match pairs
+def create_dictionary_match_pairs(path_to_contig_exon_match):
+    dictionary_match = {}
+    with open(path_to_contig_exon_match, 'rt') as myfile:
+        for line in myfile:
+            (contig_name, exon_name) = line.split('\t')
+            dictionary_match[contig_name] = exon_name
+    return dictionary_match
 
 
 # Create directory of given path if it doesn't exist
@@ -118,134 +146,129 @@ def create_dir(path):
         print("Directory ", path, " already exists")
 
 
-# creates new file
-def create_ftxt(path):
-    txt_file = open(path + '.txt', "w+")
-    txt_file.close()
-    print(path + ".txt is created")
+def write_fstat(path, contig_name, exon_name):
+    f = open(path, "a+")
+    f.write(contig_name + "\t" + exon_name + "\n")
+    f.close()
 
 
-# checks if contig-exon pairs in highest_hits_filtered.txt are present in contig_exon_match_list.txt
-# if yes, creates new exon_name.fasta file with contig consensus sequence for MAFFT
-def check_overlap_hit_pairs(dictionary_hits_sorted, dictionary_match_sorted, dictionary_hits, dictionary_match,
-                            path_to_mafft_species_dir, path_to_consensus_dir, list_consensus_dir, path_to_fseq_exons,
-                            path_to_fno_match_pairs):
-    for contig_name_fhit in dictionary_hits_sorted:
-        for contig_name_fmatch in dictionary_match_sorted:
-            if contig_name_fhit == contig_name_fmatch:
-                exon_name_fhit = dictionary_hits[contig_name_fhit].strip()
-                exon_name_fmatch = dictionary_match[contig_name_fmatch].strip()
-                if exon_name_fhit == exon_name_fmatch:
-                    path_to_mafft_fexon = path_to_mafft_species_dir + exon_name_fhit
-                    create_ftxt(path_to_mafft_fexon)
-                    # read and write matching consensus sequence in new text file
-                    write_ffasta(list_consensus_dir, contig_name_fhit, path_to_consensus_dir, path_to_mafft_fexon)
-                    # write all contig-exon pairs in fseq_exons
-                    fseq_exons = open(path_to_fseq_exons, "a+")
-                    fseq_exons.write(contig_name_fhit + "\t" + exon_name_fhit + "\n")
-                    fseq_exons.close()
+# if match: creates new exon_name.fasta file for MAFFT
+# and write pair in sequenced_exons.txt. If not a match: write pair in no_match_pairs.txt
+def create_mafft_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
+                        path_to_mafft_species_dir, path_to_fseq_exons, path_to_fno_match):
+    for hit_contig in dictionary_hits_lsorted:
+        for match_contig in dictionary_match_lsorted:
+            if hit_contig == match_contig:
+                hit_exon = dictionary_hits[hit_contig].strip()
+                match_exon = dictionary_match[match_contig].strip()
+                if hit_exon == match_exon:
+                    path_to_fexon = path_to_mafft_species_dir + hit_exon + '.txt'
+                    create_ftxt(path_to_fexon)
+                    write_fstat(path_to_fseq_exons, hit_contig, hit_exon)
                 else:
-                    # print pair die niet present is in path_to_fno_match_pairs
-                    fno_match_pairs = open(path_to_fno_match_pairs, "a+")
-                    fno_match_pairs.write(contig_name_fhit + "\t" + exon_name_fhit)
-                    fno_match_pairs.close()
+                    write_fstat(path_to_fno_match, hit_contig, hit_exon)
 
 
-def write_ffasta(list_consensus_dir, contig_name_fhit, path_to_consensus_dir, path_to_mafft_fexon):
-    for contig_name_file in list_consensus_dir:
-        contig_name, txt = contig_name_file.split('.')
-
-        if contig_name_fhit == contig_name:
-            contig_consensus_file = open(path_to_consensus_dir + contig_name + '.txt', 'rt')
-            exon_file = open(path_to_mafft_fexon, "w+")
-            for line in contig_consensus_file:
-                exon_file.write(line)
-            contig_consensus_file.close()
-            exon_file.close()
+def append_mafft_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
+                    path_to_mafft_species_dir, sorted_list_consensus_dir, path_to_consensus_dir):
+    for hit_contig in dictionary_hits_lsorted:
+        for match_contig in dictionary_match_lsorted:
+            if hit_contig == match_contig:
+                hit_exon = dictionary_hits[hit_contig].strip()
+                match_exon = dictionary_match[match_contig].strip()
+                if hit_exon == match_exon:
+                    path_to_fexon = path_to_mafft_species_dir + hit_exon + '.txt'
+                    for contig_name_file in sorted_list_consensus_dir:
+                        contig_name, txt = contig_name_file.split('.')
+                        if hit_contig == contig_name:
+                            path_to_fcontig_consensus = path_to_consensus_dir + contig_name + '.txt'
+                            contig_consensus_file = open(path_to_fcontig_consensus, 'rt')
+                            exon_file = open(path_to_fexon, "a+")
+                            for line in contig_consensus_file:
+                                exon_file.write(line)
+                            contig_consensus_file.close()
+                            exon_file.close()
 
 
 # # # Code starts here:
-# creates a new empty highest_hits.txt file
-path_to_fhighest_hits = "./results/blat/" + SPECIES + "/highest_hits.txt"
-create_fhits(path_to_fhighest_hits)
+path_to_assembled_exons_dir = "results/assembled_exons/"
+dirs = os.listdir(path_to_assembled_exons_dir)
+for species_name in dirs:
 
-# creates separate dictionary for mapped contigs with their start and end position
-path_to_mapped_contigs = "./results/assembled_exons/" + SPECIES + "/mapped_contigs.txt"
-dictionary_contigs = create_dictionary_start_end(path_to_mapped_contigs)
-dictionary_contigs_sorted = natural_sort(dictionary_contigs)
+    # # STEP 1: Checks all fragment overlaps between contigs and exons
 
-# creates separate dictionary for target exons with their start and end position
-path_to_exons_enum = "./data/exons/AT_exon_enum.txt"
-dictionary_exons = create_dictionary_start_end(path_to_exons_enum)
-dictionary_exons_sorted = natural_sort(dictionary_exons)
+    # creates separate dictionary for mapped contigs and target exons with their start and end position
+    path_to_assembled_species_dir = "results/assembled_exons/" + species_name + "/"
+    path_to_mapped_contigs = path_to_assembled_species_dir + "mapped_contigs.txt"
+    path_to_exons_enum = "./data/exons/AT_exon_enum.txt"
+    dictionary_contigs = create_dictionary_start_end(path_to_mapped_contigs)
+    dictionary_exons = create_dictionary_start_end(path_to_exons_enum)
+    dictionary_contigs_lsorted = natural_sort(dictionary_contigs)
+    dictionary_exons_lsorted = natural_sort(dictionary_exons)
 
-# create an empty contig_exon_match_list.txt
-path_to_contig_exon_match = "./results/assembled_exons/" + SPECIES + "/contig_exon_match_list.txt"
-f = open(path_to_contig_exon_match, "w+")
-f.close()
+    # add matching pairs in contig_exon_match_list.txt if mapped contig fragments matches/overlaps with the exon fragments
+    path_to_blat_species_dir = "./results/blat/" + species_name + "/"
+    path_to_blat_stats = path_to_blat_species_dir + "stats/"
+    create_dir(path_to_blat_stats)
 
-# checks which mapped contig starting and ending position matches with exons starting and ending position
-# and puts the matching pairs in contig_exon_match_list.txt
-check_overlap(dictionary_contigs_sorted, dictionary_exons_sorted)
+    path_to_contig_exon_match = path_to_blat_stats + "contig_exon_match_list.txt"
+    create_ftxt(path_to_contig_exon_match)
+    check_overlap(dictionary_contigs_lsorted, dictionary_exons_lsorted, path_to_contig_exon_match)
 
-# loops over psl files in the psl dir
-path_to_psl_dir = "./results/blat/" + SPECIES + "/"
-list_in_psl_dir = os.listdir(path_to_psl_dir)
-list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
-pattern = "*.psl"
 
-# create new file for filtered highest hits based on cutoffs
-path_to_fhighest_hits_filtered = path_to_psl_dir + "highest_hits_filtered.txt"
-create_fhits(path_to_fhighest_hits_filtered)
+    # # STEP 2: Reads all PSL files one by one and parse info in highest_hits.txt for every contig
+    path_to_fhighest_hits = path_to_blat_stats + "highest_hits.txt"
+    create_fhits(path_to_fhighest_hits)
 
-# read the psl files one by one
-# parse the highest target name, query name, ID percentage and score
-# paste them in a file called highest_hits.txt for every species
-for entry in list_in_psl_dir_sorted:
-    if fnmatch.fnmatch(entry, pattern):
-        psl_file = entry
-        path_to_psl = path_to_psl_dir + psl_file
-        read_psl(path_to_psl)
+    list_in_psl_dir = os.listdir(path_to_blat_species_dir)
+    list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
+    pattern = "*.psl"
+    for file in list_in_psl_dir_sorted:
+        if fnmatch.fnmatch(file, pattern):
+            psl_file = file
+            path_to_psl = path_to_blat_species_dir + psl_file
+            read_psl(path_to_psl)
 
-# create file with matches with PID/score < cutoffs
-path_to_fbelow_cutoff = path_to_psl_dir + "below_cutoff_pairs.txt"
-create_ftxt(path_to_fbelow_cutoff)
-check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered, path_to_fbelow_cutoff)
 
-# create dictionary for highest_hits_filtered contig_exon match pairs
-with open(path_to_fhighest_hits_filtered, 'rt') as myfile:
-    dictionary_hits = {}
-    for line in myfile:
-        if not line.startswith('target_name'):
-            (contig_name, exon_name, percent_ID, PSL_score) = line.split('\t')
-            dictionary_hits[contig_name] = exon_name
-dictionary_hits_sorted = natural_sort(dictionary_hits)
+    # # STEP 3: Filter on cutoffs for score and ID%
+    # if > cutoff: paste information in highest_hits_filtered.txt; if < cutoff: copy in below_cutoff_pairs.txt
+    path_to_fhighest_hits_filtered = path_to_blat_stats + "highest_hits_filtered.txt"
+    path_to_fbelow_cutoff = path_to_blat_stats + "below_cutoff_pairs.txt"
+    create_fhits(path_to_fhighest_hits_filtered)
+    create_ftxt(path_to_fbelow_cutoff)
+    check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered, path_to_fbelow_cutoff)
 
-# create dictionary for contig_exon_match pairs
-with open(path_to_contig_exon_match, 'rt') as myfile:
-    dictionary_match = {}
-    for line in myfile:
-        (contig_name, exon_name) = line.split('\t')
-        dictionary_match[contig_name] = exon_name
-dictionary_match_sorted = natural_sort(dictionary_match)
 
-# create new MAFFT dirs for input and stats
-path_to_mafft = './results/mafft/'
-path_to_mafft_species_dir = path_to_mafft + SPECIES + "/"
-path_to_mafft_stats = path_to_mafft_species_dir + "stats/"
-create_dir(path_to_mafft)
-create_dir(path_to_mafft_species_dir)
-create_dir(path_to_mafft_stats)
+    # # STEP 4: Check if highest_hits_filtered.txt matches are also overlapped fragments in contig_exon_match_list.txt
+    # # If yes: creates new .fasta file for MAFFT
 
-# create statistical files
-path_to_fseq_exons = path_to_mafft_stats + "sequenced_exons.txt"
-path_to_fno_match_pairs = path_to_mafft_stats + "no_match_pairs.txt"
-create_ftxt(path_to_fseq_exons)
-create_ftxt(path_to_fno_match_pairs)
+    # create dictionaries for highest_hits_filtered.txt and contig_exon_match_list.txt
+    dictionary_hits = create_dictionary_highest_hits_filtered(path_to_fhighest_hits_filtered)
+    dictionary_match = create_dictionary_match_pairs(path_to_contig_exon_match)
+    dictionary_hits_lsorted = natural_sort(dictionary_hits)
+    dictionary_match_lsorted = natural_sort(dictionary_match)
 
-# prepare fasta files for MAFFT
-path_to_consensus_dir = "./results/consensus/" + SPECIES + "/"
-list_consensus_dir = natural_sort(os.listdir(path_to_consensus_dir))
-check_overlap_hit_pairs(dictionary_hits_sorted, dictionary_match_sorted, dictionary_hits, dictionary_match,
-                        path_to_mafft_species_dir, path_to_consensus_dir, list_consensus_dir,
-                        path_to_fseq_exons, path_to_fno_match_pairs)
+    # create new MAFFT dir for input
+    path_to_mafft = './results/mafft/'
+    path_to_mafft_species_dir = path_to_mafft + species_name + "/"
+    create_dir(path_to_mafft)
+    create_dir(path_to_mafft_species_dir)
+
+    # creates new stats directory and stats files sequenced_exons.txt and no_match_pairs.txt
+    path_to_mafft_stats = path_to_mafft_species_dir + "stats/"
+    create_dir(path_to_mafft_stats)
+    path_to_fseq_exons = path_to_mafft_stats + "sequenced_exons.txt"
+    path_to_fno_match = path_to_mafft_stats + "no_match_pairs.txt"
+    create_ftxt(path_to_fseq_exons)
+    create_ftxt(path_to_fno_match)
+
+    create_mafft_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
+                        path_to_mafft_species_dir, path_to_fseq_exons, path_to_fno_match)
+
+    # append all contig consensus sequence to the exon_name.fasta file
+    path_to_consensus_dir = "./results/consensus/" + species_name + "/"
+    list_consensus_dir = os.listdir(path_to_consensus_dir)
+    sorted_list_consensus_dir = natural_sort(list_consensus_dir)
+
+    append_mafft_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
+                        path_to_mafft_species_dir, sorted_list_consensus_dir, path_to_consensus_dir)
