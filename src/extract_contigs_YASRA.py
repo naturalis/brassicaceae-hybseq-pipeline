@@ -50,44 +50,47 @@ def count_save_stats(path_to_txt, ncontigs, nexons):
 
 
 # Code starts here
-# Creating paths for output directory
-# Deze paths moeten nog automatisch laten loopen, maar daarvoor moet eerst deze output directory naam gewijzigd worden
-path_to_YASRA_dir = './results/alignments/SRR8528336_reads.fq_ref-at.fasta_Mon-May-25-08:50:00-2020/YASRA_related_files/'
-path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_SRR8528336_reads.fq_ref-at.fasta.sam'
-path_to_assembled_exons = './results/assembled_exons/'
-path_to_species = path_to_assembled_exons + 'SRR8528336/'
-path_to_txt = path_to_species + 'txt/'
+path_to_deduplicated_dir = "results/deduplicated_reads/"
+dirs = os.listdir(path_to_deduplicated_dir)
+for species_name in dirs:
 
-create_dir(path_to_assembled_exons)
-create_dir(path_to_species)
-create_dir(path_to_txt)
+    # Creating paths for output directory
+    path_to_YASRA_dir = './results/alignments/' + species_name + "/YASRA_related_files/"
+    path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_' + species_name + '_reads.fq_ref-at.fasta.sam'
+    path_to_assembled_exons = './results/assembled_exons/'
+    path_to_species = path_to_assembled_exons + species_name + '/'
+    path_to_txt = path_to_species + 'txt/'
 
-# Creates assembled contig list and dictionary for start and end position
-path_to_final_assembly = path_to_YASRA_dir +'Final_Assembly_SRR8528336_reads.fq_ref-at.fasta'
-path_to_mapped_contigs = path_to_species + "mapped_contigs.txt"
+    create_dir(path_to_assembled_exons)
+    create_dir(path_to_species)
+    create_dir(path_to_txt)
 
-create_mapped_contig_list(path_to_final_assembly, path_to_mapped_contigs)
+    # Creates assembled contig list and dictionary for start and end position
+    path_to_final_assembly = path_to_YASRA_dir + 'Final_Assembly_' + species_name + '_reads.fq_ref-at.fasta'
+    path_to_mapped_contigs = path_to_species + "mapped_contigs.txt"
 
-# write new SAM files for every contig after YASRA
-ncontigs = 0
-nexons = 0
-contig_name_temporary = " "
-with open(path_to_YASRA_fSAM, 'rt') as myfile:
-    for myline in myfile:
-        if myline.startswith('>'):
-            ncontigs += 1
-            qname, flag, contig, pos, mapq, cigar, rnext, pnext, tlen, read, phred = myline.split("\t")
+    create_mapped_contig_list(path_to_final_assembly, path_to_mapped_contigs)
 
-            contig_number, reference_genome, contig_start, contig_end = contig.split("_")
-            contig_length = int(contig_end) - int(contig_start) + 1
+    # write new SAM files for every contig after YASRA
+    ncontigs = 0
+    nexons = 0
+    contig_name_temporary = " "
+    with open(path_to_YASRA_fSAM, 'rt') as myfile:
+        for myline in myfile:
+            if myline.startswith('>'):
+                ncontigs += 1
+                qname, flag, contig, pos, mapq, cigar, rnext, pnext, tlen, read, phred = myline.split("\t")
 
-            if contig != contig_name_temporary:
-                create_new_fSAM(path_to_txt, contig_number, reference_genome, contig, contig_length, myline)
+                contig_number, reference_genome, contig_start, contig_end = contig.split("_")
+                contig_length = int(contig_end) - int(contig_start) + 1
 
-                nexons +=1
-                contig_name_temporary = contig
+                if contig != contig_name_temporary:
+                    create_new_fSAM(path_to_txt, contig_number, reference_genome, contig, contig_length, myline)
 
-            elif contig == contig_name_temporary:
-                write_to_fSAM(path_to_txt, contig_number, reference_genome, myline)
+                    nexons +=1
+                    contig_name_temporary = contig
 
-    count_save_stats(path_to_txt, ncontigs, nexons)
+                elif contig == contig_name_temporary:
+                    write_to_fSAM(path_to_txt, contig_number, reference_genome, myline)
+
+        count_save_stats(path_to_txt, ncontigs, nexons)
