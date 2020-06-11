@@ -13,11 +13,11 @@ CONTIG_NRS = range(1, CONTIGS_IN_DIR+1)   #["1", "2", "3"]
 # raw_reads_reverse_samples = expand("data/raw_reads/{samples}_2.fastq.gz", samples = SAMPLES)
 # raw_reads_samples = expand("data/raw_reads/{samples}_count_reads.txt", samples = SAMPLES)
 # deduplication_variables = expand("results/deduplicated_reads/SRR8528336/SRR8528336_{frpu}_dedupl.fq", frpu = FRPU)
-# fsam_variables = expand("results/assembled_exons/SRR8528336/sam/Contig{nr}_AT.sam", nr = CONTIG_NRS)
-# fbam_variables = expand("results/assembled_exons/SRR8528336/bam/Contig{nr}_AT.bam", nr = CONTIG_NRS)
-# sorted_fbam_variables = expand("results/assembled_exons/SRR8528336/sorted_bam/Contig{nr}_AT_sort.bam", nr = CONTIG_NRS)
-# pileup_variables = expand("results/assembled_exons/SRR8528336/pileup/Contig{nr}_AT_sort.pileup", nr = CONTIG_NRS)
-# var_variables = expand("results/assembled_exons/SRR8528336/var/Contig{nr}_AT_sort.var", nr = CONTIG_NRS)
+# fsam_variables = expand("results/mapped_contigs/SRR8528336/sam/Contig{nr}_AT.sam", nr = CONTIG_NRS)
+# fbam_variables = expand("results/mapped_contigs/SRR8528336/bam/Contig{nr}_AT.bam", nr = CONTIG_NRS)
+# sorted_fbam_variables = expand("results/mapped_contigs/SRR8528336/sorted_bam/Contig{nr}_AT_sort.bam", nr = CONTIG_NRS)
+# pileup_variables = expand("results/mapped_contigs/SRR8528336/pileup/Contig{nr}_AT_sort.pileup", nr = CONTIG_NRS)
+# var_variables = expand("results/mapped_contigs/SRR8528336/var/Contig{nr}_AT_sort.var", nr = CONTIG_NRS)
 blat_variables = expand("results/blat/SRR8528336/contig{nr}_AT.psl", nr = CONTIG_NRS)
 
 
@@ -98,6 +98,8 @@ rule alignreads:
     input:
         "results/deduplicated_reads/SRR8528336/SRR8528336_reads.fq",
         "data/reference_genomes/ref-at.fasta"
+    output:
+        "results/align"
     shell:
         "alignreads {input} "
         "--single-step "
@@ -106,6 +108,7 @@ rule alignreads:
         "--percent-identity medium "
         "--depth-position-masking 5- "
         "--proportion-base-filter 0.7-"
+        "--output-directory {output}"
 
 # extract contigs from created SAM file after YASRA and create per contig new SAM files with headers
 rule extract_contigs:
@@ -116,41 +119,41 @@ rule extract_contigs:
 
 rule convert_to_fSAM:
     input:
-        "results/assembled_exons/SRR8528336/txt/Contig{nr}_AT.txt"
+        "results/mapped_contigs/SRR8528336/txt/Contig{nr}_AT.txt"
     output:
-        temp("results/assembled_exons/SRR8528336/sam/Contig{nr}_AT.sam")
+        temp("results/mapped_contigs/SRR8528336/sam/Contig{nr}_AT.sam")
     shell:
         "cp {input} {output}"
 
 rule convert_to_fBAM:
     input:
-        "results/assembled_exons/SRR8528336/sam/Contig{nr}_AT.sam"
+        "results/mapped_contigs/SRR8528336/sam/Contig{nr}_AT.sam"
     output:
-        temp("results/assembled_exons/SRR8528336/bam/Contig{nr}_AT.bam")
+        temp("results/mapped_contigs/SRR8528336/bam/Contig{nr}_AT.bam")
     shell:
         "samtools view -bS {input} > {output}"
 
 rule sort_fBAM:
     input:
-        "results/assembled_exons/SRR8528336/bam/Contig{nr}_AT.bam"
+        "results/mapped_contigs/SRR8528336/bam/Contig{nr}_AT.bam"
     output:
-        temp("results/assembled_exons/SRR8528336/sorted_bam/Contig{nr}_AT_sort.bam")
+        temp("results/mapped_contigs/SRR8528336/sorted_bam/Contig{nr}_AT_sort.bam")
     shell:
         "samtools sort -m5G {input} -o {output}"
 
 rule convert_to_fpileup:
     input:
-        "results/assembled_exons/SRR8528336/sorted_bam/Contig{nr}_AT_sort.bam"
+        "results/mapped_contigs/SRR8528336/sorted_bam/Contig{nr}_AT_sort.bam"
     output:
-        temp("results/assembled_exons/SRR8528336/pileup/Contig{nr}_AT_sort.pileup")
+        temp("results/mapped_contigs/SRR8528336/pileup/Contig{nr}_AT_sort.pileup")
     shell:
         "samtools mpileup -B {input} > {output}"
 
 rule SNP_calling:
     input:
-        "results/assembled_exons/SRR8528336/pileup/Contig{nr}_AT_sort.pileup"
+        "results/mapped_contigs/SRR8528336/pileup/Contig{nr}_AT_sort.pileup"
     output:
-        "results/assembled_exons/SRR8528336/var/Contig{nr}_AT_sort.var"
+        "results/mapped_contigs/SRR8528336/var/Contig{nr}_AT_sort.var"
     shell:
         "varscan pileup2cns {input} "
         "--min-freq-for-hom 0.6 "
