@@ -95,11 +95,11 @@ def append_empty_contigs(path_to_consensus_species_dir, contig_number):
 
 
 # Code starts here
-path_to_assembled_exons_dir = "./results/assembled_exons/"
+path_to_mapped_contigs_dir = "./results/mapped_contigs/"
 
-dirs = os.listdir(path_to_assembled_exons_dir)
+dirs = os.listdir(path_to_mapped_contigs_dir)
 for species_name in dirs:
-    path_to_var_dir = path_to_assembled_exons_dir + species_name + "/var/"
+    path_to_var_dir = path_to_mapped_contigs_dir + species_name + "/var/"
     n_contig_files = count_contigs(path_to_var_dir)
 
     # Create consensus directory en file for every species if it doesn't exist
