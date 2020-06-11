@@ -57,19 +57,19 @@ for species_name in dirs:
     # Creating paths for output directory
     path_to_YASRA_dir = './results/alignments/' + species_name + "/YASRA_related_files/"
     path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_' + species_name + '_reads.fq_ref-at.fasta.sam'
-    path_to_assembled_exons = './results/assembled_exons/'
-    path_to_species = path_to_assembled_exons + species_name + '/'
+    path_to_mapped_contigs = './results/mapped_contigs/'
+    path_to_species = path_to_mapped_contigs + species_name + '/'
     path_to_txt = path_to_species + 'txt/'
 
-    create_dir(path_to_assembled_exons)
+    create_dir(path_to_mapped_contigs)
     create_dir(path_to_species)
     create_dir(path_to_txt)
 
     # Creates assembled contig list and dictionary for start and end position
     path_to_final_assembly = path_to_YASRA_dir + 'Final_Assembly_' + species_name + '_reads.fq_ref-at.fasta'
-    path_to_mapped_contigs = path_to_species + "mapped_contigs.txt"
+    path_to_fmapped_contigs = path_to_species + "mapped_contigs.txt"
 
-    create_mapped_contig_list(path_to_final_assembly, path_to_mapped_contigs)
+    create_mapped_contig_list(path_to_final_assembly, path_to_fmapped_contigs)
 
     # write new SAM files for every contig after YASRA
     ncontigs = 0
