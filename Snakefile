@@ -117,14 +117,6 @@ rule extract_contigs:
     shell:
         "python3 {input}"
 
-rule convert_to_fSAM:
-    input:
-        "results/mapped_contigs/SRR8528336/txt/Contig{nr}_AT.txt"
-    output:
-        temp("results/mapped_contigs/SRR8528336/sam/Contig{nr}_AT.sam")
-    shell:
-        "cp {input} {output}"
-
 rule convert_to_fBAM:
     input:
         "results/mapped_contigs/SRR8528336/sam/Contig{nr}_AT.sam"
@@ -145,7 +137,7 @@ rule convert_to_fpileup:
     input:
         "results/mapped_contigs/SRR8528336/sorted_bam/Contig{nr}_AT_sort.bam"
     output:
-        temp("results/mapped_contigs/SRR8528336/pileup/Contig{nr}_AT_sort.pileup")
+        "results/mapped_contigs/SRR8528336/pileup/Contig{nr}_AT_sort.pileup"
     shell:
         "samtools mpileup -B {input} > {output}"
 
