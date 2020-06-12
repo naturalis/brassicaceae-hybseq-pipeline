@@ -30,21 +30,21 @@ def create_mapped_contig_list(path_to_final_assembly, path_to_mapped_contigs):
     f.close()
 
 
-def create_new_fSAM(path_to_txt, contig_number, reference_genome, contig, contig_length, myline):
-    f = open(path_to_txt + contig_number + "_" + reference_genome + ".txt", "w+")
+def create_new_fSAM(path_to_sam, contig_number, reference_genome, contig, contig_length, myline):
+    f = open(path_to_sam + contig_number + "_" + reference_genome + ".sam", "w+")
     print("New text file created: " + contig_number + "_" + reference_genome)
     f.write("@HD\tVN:1.3\n@SQ\tSN:" + contig + "\tLN:" + str(contig_length) + "\n" + myline)
     f.close()
 
 
-def write_to_fSAM(path_to_txt, contig_number, reference_genome, myline):
-    f = open(path_to_txt + contig_number + "_" + reference_genome + ".txt", "a+")
+def write_to_fSAM(path_to_sam, contig_number, reference_genome, myline):
+    f = open(path_to_sam + contig_number + "_" + reference_genome + ".sam", "a+")
     f.write(myline)
     f.close()
 
 
-def count_save_stats(path_to_txt, nreads, ncontigs):
-    f = open(path_to_txt + "number_of_reads_and_contigs.txt", "w+")
+def count_save_stats(path_to_sam, nreads, ncontigs):
+    f = open(path_to_sam + "number_of_reads_and_contigs.txt", "w+")
     f.write("Number of reads: " + str(nreads) + "\nNumber of contigs: " + str(ncontigs) + "\n")
     f.close()
 
@@ -59,11 +59,11 @@ for species_name in dirs:
     path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_' + species_name + '_reads.fq_ref-at.fasta.sam'
     path_to_mapped_contigs = './results/mapped_contigs/'
     path_to_species = path_to_mapped_contigs + species_name + '/'
-    path_to_txt = path_to_species + 'txt/'
+    path_to_sam = path_to_species + 'sam/'
 
     create_dir(path_to_mapped_contigs)
     create_dir(path_to_species)
-    create_dir(path_to_txt)
+    create_dir(path_to_sam)
 
     # Creates assembled contig list and dictionary for start and end position
     path_to_final_assembly = path_to_YASRA_dir + 'Final_Assembly_' + species_name + '_reads.fq_ref-at.fasta'
@@ -85,12 +85,12 @@ for species_name in dirs:
                 contig_length = int(contig_end) - int(contig_start) + 1
 
                 if contig != contig_name_temporary:
-                    create_new_fSAM(path_to_txt, contig_number, reference_genome, contig, contig_length, myline)
+                    create_new_fSAM(path_to_sam, contig_number, reference_genome, contig, contig_length, myline)
 
                     ncontigs +=1
                     contig_name_temporary = contig
 
                 elif contig == contig_name_temporary:
-                    write_to_fSAM(path_to_txt, contig_number, reference_genome, myline)
+                    write_to_fSAM(path_to_sam, contig_number, reference_genome, myline)
 
-        count_save_stats(path_to_txt, nreads, ncontigs)
+        count_save_stats(path_to_sam, nreads, ncontigs)
