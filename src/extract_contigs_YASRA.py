@@ -43,9 +43,9 @@ def write_to_fSAM(path_to_txt, contig_number, reference_genome, myline):
     f.close()
 
 
-def count_save_stats(path_to_txt, ncontigs, nexons):
-    f = open(path_to_txt + "number_of_contigs_and_exons.txt", "w+")
-    f.write("Number of contigs: " + str(ncontigs) + "\nNumber of exons: " + str(nexons) + "\n")
+def count_save_stats(path_to_txt, nreads, ncontigs):
+    f = open(path_to_txt + "number_of_reads_and_contigs.txt", "w+")
+    f.write("Number of reads: " + str(nreads) + "\nNumber of contigs: " + str(ncontigs) + "\n")
     f.close()
 
 
@@ -72,13 +72,13 @@ for species_name in dirs:
     create_mapped_contig_list(path_to_final_assembly, path_to_fmapped_contigs)
 
     # write new SAM files for every contig after YASRA
+    nreads = 0
     ncontigs = 0
-    nexons = 0
     contig_name_temporary = " "
     with open(path_to_YASRA_fSAM, 'rt') as myfile:
         for myline in myfile:
             if myline.startswith('>'):
-                ncontigs += 1
+                nreads += 1
                 qname, flag, contig, pos, mapq, cigar, rnext, pnext, tlen, read, phred = myline.split("\t")
 
                 contig_number, reference_genome, contig_start, contig_end = contig.split("_")
@@ -87,10 +87,10 @@ for species_name in dirs:
                 if contig != contig_name_temporary:
                     create_new_fSAM(path_to_txt, contig_number, reference_genome, contig, contig_length, myline)
 
-                    nexons +=1
+                    ncontigs +=1
                     contig_name_temporary = contig
 
                 elif contig == contig_name_temporary:
                     write_to_fSAM(path_to_txt, contig_number, reference_genome, myline)
 
-        count_save_stats(path_to_txt, ncontigs, nexons)
+        count_save_stats(path_to_txt, nreads, ncontigs)
