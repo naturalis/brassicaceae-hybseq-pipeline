@@ -6,6 +6,7 @@
 import os, fnmatch
 import re
 from Bio import SearchIO
+from Bio import SeqIO
 
 PSL_HEADER_LINES = 5
 ID_PCT_CUTOFF = 75
@@ -152,12 +153,13 @@ def write_fstat(path, contig_name, exon_name):
     f.close()
 
 
-# check match exon pairs and if match: creates new exon_name.fasta file for MAFFT input and append contig if file
-# already exist. Writes all exons with multiple contigs in multiple_contigs.txt.
+# check match exon pairs and if match: creates new exon_name.fasta file for MAFFT input and append original exon
+# sequence and contig if file does not exist yet. If already exist: only appends contigs.
+# Writes all exons with multiple contigs in multiple_contigs.txt.
 # and write pair in sequenced_exons.txt. If not a match: write pair in no_match_pairs.txt
 def create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
-                        path_to_mapped_exons_species_dir, sorted_list_consensus_dir, path_to_consensus_dir,
-                        path_to_fseq_exons, path_to_fmultiple_contigs, path_to_fno_match):
+                       path_to_mapped_exons_species_dir, path_to_fseq_exons, path_to_fexons_seq,
+                       sorted_list_consensus_dir, path_to_consensus_dir, path_to_fmultiple_contigs, path_to_fno_match):
     temporary_exon = ""
     for hit_contig in dictionary_hits_lsorted:
         for match_contig in dictionary_match_lsorted:
@@ -169,27 +171,30 @@ def create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictio
                     if match_exon != temporary_exon:
                         create_ftxt(path_to_fexon)
                         write_fstat(path_to_fseq_exons, hit_contig, hit_exon)
-                        append_contigs(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
+                        for record in SeqIO.parse(path_to_fexons_seq, "fasta"):
+                            if hit_exon == record.id:
+                                fexon = open(path_to_fexon, "a+")
+                                fexon.write(">" + record.id + "\n")
+                                fexon.write(str(record.seq) + "\n")
+                        append_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
                         temporary_exon = match_exon
                     elif match_exon == temporary_exon:
-                        append_contigs(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
-                        fmultiple_contigs = open(path_to_fmultiple_contigs, "a+")
-                        fmultiple_contigs.write(match_exon + "\n")
-                        fmultiple_contigs.close()
+                        append_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
+                        write_fstat(path_to_fmultiple_contigs, hit_contig, hit_exon)
                 else:
                     write_fstat(path_to_fno_match, hit_contig, hit_exon)
 
 
-def append_contigs(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon):
-    for contig_name_file in sorted_list_consensus_dir:
-        contig_name, txt = contig_name_file.split('.')
-        if hit_contig == contig_name:
-            path_to_fcontig_consensus = path_to_consensus_dir + contig_name + '.txt'
-            contig_consensus_file = open(path_to_fcontig_consensus, 'rt')
+def append_seq(sorted_dir_list, match_name, path_to_seq_dir, path_to_fexon):
+    for name_file in sorted_dir_list:
+        name, txt = name_file.split('.')
+        if match_name == name:
+            path_to_fseq = path_to_seq_dir + name + '.txt'
+            fseq = open(path_to_fseq, 'rt')
             exon_file = open(path_to_fexon, "a+")
-            for line in contig_consensus_file:
+            for line in fseq:
                 exon_file.write(line)
-            contig_consensus_file.close()
+            fseq.close()
             exon_file.close()
 
 
@@ -263,11 +268,12 @@ for species_name in dirs:
     create_ftxt(path_to_fno_match)
     create_ftxt(path_to_fmultiple_contigs)
 
-    # append all contig consensus sequence to the exon_name.fasta file
+    # create path to append original exon and consensus sequences to the exon fasta files as MAFFT input
+    path_to_fexons_seq = "./data/exons/exons_AT.fasta"
     path_to_consensus_dir = "./results/consensus/" + species_name + "/"
     list_consensus_dir = os.listdir(path_to_consensus_dir)
     sorted_list_consensus_dir = natural_sort(list_consensus_dir)
 
     create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
-                        path_to_mapped_exons_species_dir, sorted_list_consensus_dir, path_to_consensus_dir,
-                        path_to_fseq_exons, path_to_fmultiple_contigs, path_to_fno_match)
+                       path_to_mapped_exons_species_dir, path_to_fseq_exons, path_to_fexons_seq,
+                       sorted_list_consensus_dir, path_to_consensus_dir, path_to_fmultiple_contigs, path_to_fno_match)
