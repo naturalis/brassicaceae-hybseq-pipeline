@@ -1,13 +1,16 @@
 # extract_hits_psl.py
 # This script is to extract the highest hits from psl files after BLAT
+# Can be executed by: $ python extract_hits_psl.py [SAMPLE_NAME], for example: $ python extract_hits_psl.py SRR8528336
 # Made by: Elfy Ly
 # Date: 22 May 2020
 
+import sys
 import os, fnmatch
 import re
 from Bio import SearchIO
 from Bio import SeqIO
 
+SAMPLE_NAME = sys.argv[1]
 PSL_HEADER_LINES = 5
 ID_PCT_CUTOFF = 75
 SCORE_CUTOFF = 20
@@ -93,7 +96,7 @@ def extract_hits(path_to_psl):
     return t_name_highest, q_name_highest, id_pct_highest, max_score
 
 
-# add highest BLAT scored exons hits per contig per species_name in highest_hits.txt file
+# add highest BLAT scored exons hits per contig per SAMPLE_NAME in highest_hits.txt file
 def write_fhighest_hits(path_to_fhighest_hits, t_name_highest, q_name_highest, id_pct_highest, max_score):
     f = open(path_to_fhighest_hits, "a+")
     f.write(t_name_highest + "\t" + q_name_highest + "\t" + str(id_pct_highest) + "\t" + str(max_score) + "\n")
@@ -200,80 +203,78 @@ def append_seq(sorted_dir_list, match_name, path_to_seq_dir, path_to_fexon):
 
 # # # Code starts here:
 path_to_mapped_contigs_dir = "results/mapped_contigs/"
-dirs = os.listdir(path_to_mapped_contigs_dir)
-for species_name in dirs:
 
-    '''STEP 1: Checks all fragment overlaps between contigs and exons'''
-    # creates separate dictionary for mapped contigs and target exons with their start and end position
-    path_to_assembled_species_dir = path_to_mapped_contigs_dir + species_name + "/"
-    path_to_fmapped_contigs = path_to_assembled_species_dir + "mapped_contigs.txt"
-    path_to_exons_enum = "./data/exons/AT_exon_enum.txt"
-    dictionary_contigs = create_dictionary_start_end(path_to_fmapped_contigs)
-    dictionary_exons = create_dictionary_start_end(path_to_exons_enum)
-    dictionary_contigs_lsorted = natural_sort(dictionary_contigs)
-    dictionary_exons_lsorted = natural_sort(dictionary_exons)
+'''STEP 1: Checks all fragment overlaps between contigs and exons'''
+# creates separate dictionary for mapped contigs and target exons with their start and end position
+path_to_assembled_species_dir = path_to_mapped_contigs_dir + SAMPLE_NAME + "/"
+path_to_fmapped_contigs = path_to_assembled_species_dir + "mapped_contigs.txt"
+path_to_exons_enum = "./data/exons/AT_exon_enum.txt"
+dictionary_contigs = create_dictionary_start_end(path_to_fmapped_contigs)
+dictionary_exons = create_dictionary_start_end(path_to_exons_enum)
+dictionary_contigs_lsorted = natural_sort(dictionary_contigs)
+dictionary_exons_lsorted = natural_sort(dictionary_exons)
 
-    # add matching pairs in contig_exon_match_list.txt if mapped contig fragments matches/overlaps
-    # with the exon fragments
-    path_to_blat_species_dir = "./results/blat/" + species_name + "/"
-    path_to_blat_stats = path_to_blat_species_dir + "stats/"
-    create_dir(path_to_blat_stats)
+# add matching pairs in contig_exon_match_list.txt if mapped contig fragments matches/overlaps
+# with the exon fragments
+path_to_blat_species_dir = "./results/blat/" + SAMPLE_NAME + "/"
+path_to_blat_stats = path_to_blat_species_dir + "stats/"
+create_dir(path_to_blat_stats)
 
-    path_to_contig_exon_match = path_to_blat_stats + "contig_exon_match_list.txt"
-    create_ftxt(path_to_contig_exon_match)
-    check_overlap(dictionary_contigs_lsorted, dictionary_exons_lsorted, path_to_contig_exon_match)
+path_to_contig_exon_match = path_to_blat_stats + "contig_exon_match_list.txt"
+create_ftxt(path_to_contig_exon_match)
+check_overlap(dictionary_contigs_lsorted, dictionary_exons_lsorted, path_to_contig_exon_match)
 
-    '''STEP 2: Reads all PSL files one by one and parse info in highest_hits.txt for every contig'''
-    path_to_fhighest_hits = path_to_blat_stats + "highest_hits.txt"
-    create_fhits(path_to_fhighest_hits)
+'''STEP 2: Reads all PSL files one by one and parse info in highest_hits.txt for every contig'''
+path_to_fhighest_hits = path_to_blat_stats + "highest_hits.txt"
+create_fhits(path_to_fhighest_hits)
 
-    list_in_psl_dir = os.listdir(path_to_blat_species_dir)
-    list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
-    pattern = "*.psl"
-    for file in list_in_psl_dir_sorted:
-        if fnmatch.fnmatch(file, pattern):
-            psl_file = file
-            path_to_psl = path_to_blat_species_dir + psl_file
-            read_psl(path_to_psl)
+list_in_psl_dir = os.listdir(path_to_blat_species_dir)
+list_in_psl_dir_sorted = natural_sort(list_in_psl_dir)
+pattern = "*.psl"
+for file in list_in_psl_dir_sorted:
+    if fnmatch.fnmatch(file, pattern):
+        psl_file = file
+        path_to_psl = path_to_blat_species_dir + psl_file
+        read_psl(path_to_psl)
 
-    '''STEP 3: Filter on cutoffs for score and ID%'''
-    # if > cutoff: paste information in highest_hits_filtered.txt; if < cutoff: copy in below_cutoff_pairs.txt
-    path_to_fhighest_hits_filtered = path_to_blat_stats + "highest_hits_filtered.txt"
-    path_to_fbelow_cutoff = path_to_blat_stats + "below_cutoff_pairs.txt"
-    create_fhits(path_to_fhighest_hits_filtered)
-    create_ftxt(path_to_fbelow_cutoff)
-    check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered, path_to_fbelow_cutoff)
+'''STEP 3: Filter on cutoffs for score and ID%'''
+# if > cutoff: paste information in highest_hits_filtered.txt; if < cutoff: copy in below_cutoff_pairs.txt
+path_to_fhighest_hits_filtered = path_to_blat_stats + "highest_hits_filtered.txt"
+path_to_fbelow_cutoff = path_to_blat_stats + "below_cutoff_pairs.txt"
+create_fhits(path_to_fhighest_hits_filtered)
+create_ftxt(path_to_fbelow_cutoff)
+check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered, path_to_fbelow_cutoff)
 
-    '''STEP 4: Check if highest_hits_filtered.txt matches are also overlapped fragments in contig_exon_match_list.txt
-    If yes: creates new .fasta file for MAFFT input'''
-    # create dictionaries for highest_hits_filtered.txt and contig_exon_match_list.txt
-    dictionary_hits = create_dictionary_highest_hits_filtered(path_to_fhighest_hits_filtered)
-    dictionary_match = create_dictionary_match_pairs(path_to_contig_exon_match)
-    dictionary_hits_lsorted = natural_sort(dictionary_hits)
-    dictionary_match_lsorted = natural_sort(dictionary_match)
+'''STEP 4: Check if highest_hits_filtered.txt matches are also overlapped fragments in contig_exon_match_list.txt
+If yes: creates new .fasta file for MAFFT input'''
+# create dictionaries for highest_hits_filtered.txt and contig_exon_match_list.txt
+dictionary_hits = create_dictionary_highest_hits_filtered(path_to_fhighest_hits_filtered)
+dictionary_match = create_dictionary_match_pairs(path_to_contig_exon_match)
+dictionary_hits_lsorted = natural_sort(dictionary_hits)
+dictionary_match_lsorted = natural_sort(dictionary_match)
 
-    # create new mapped_exons dir for input
-    path_to_mapped_exons = './results/mapped_exons/'
-    path_to_mapped_exons_species_dir = path_to_mapped_exons + species_name + "/"
-    create_dir(path_to_mapped_exons)
-    create_dir(path_to_mapped_exons_species_dir)
+# create new mapped_exons dir for input
+path_to_mapped_exons = './results/mapped_exons/'
+path_to_mapped_exons_species_dir = path_to_mapped_exons + SAMPLE_NAME + "/"
+create_dir(path_to_mapped_exons)
+create_dir(path_to_mapped_exons_species_dir)
 
-    # creates new stats directory and stats files sequenced_exons.txt and no_match_pairs.txt
-    path_to_mapped_exons_stats = path_to_mapped_exons_species_dir + "stats/"
-    create_dir(path_to_mapped_exons_stats)
-    path_to_fseq_exons = path_to_mapped_exons_stats + "sequenced_exons.txt"
-    path_to_fmultiple_contigs = path_to_mapped_exons_stats + "multiple_contigs.txt"
-    path_to_fno_match = path_to_mapped_exons_stats + "no_match_pairs.txt"
-    create_ftxt(path_to_fseq_exons)
-    create_ftxt(path_to_fno_match)
-    create_ftxt(path_to_fmultiple_contigs)
+# creates new stats directory and stats files sequenced_exons.txt and no_match_pairs.txt
+path_to_mapped_exons_stats = path_to_mapped_exons_species_dir + "stats/"
+create_dir(path_to_mapped_exons_stats)
+path_to_fseq_exons = path_to_mapped_exons_stats + "sequenced_exons.txt"
+path_to_fmultiple_contigs = path_to_mapped_exons_stats + "multiple_contigs.txt"
+path_to_fno_match = path_to_mapped_exons_stats + "no_match_pairs.txt"
+create_ftxt(path_to_fseq_exons)
+create_ftxt(path_to_fno_match)
+create_ftxt(path_to_fmultiple_contigs)
 
-    # create path to append original exon and consensus sequences to the exon fasta files as MAFFT input
-    path_to_fexons_seq = "./data/exons/exons_AT.fasta"
-    path_to_consensus_dir = "./results/consensus/" + species_name + "/"
-    list_consensus_dir = os.listdir(path_to_consensus_dir)
-    sorted_list_consensus_dir = natural_sort(list_consensus_dir)
+# create path to append original exon and consensus sequences to the exon fasta files as MAFFT input
+path_to_fexons_seq = "./data/exons/exons_AT.fasta"
+path_to_consensus_dir = "./results/consensus_contigs/" + SAMPLE_NAME + "/"
+list_consensus_dir = os.listdir(path_to_consensus_dir)
+sorted_list_consensus_dir = natural_sort(list_consensus_dir)
 
-    create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
-                       path_to_mapped_exons_species_dir, path_to_fseq_exons, path_to_fexons_seq,
-                       sorted_list_consensus_dir, path_to_consensus_dir, path_to_fmultiple_contigs, path_to_fno_match)
+create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
+                   path_to_mapped_exons_species_dir, path_to_fseq_exons, path_to_fexons_seq,
+                   sorted_list_consensus_dir, path_to_consensus_dir, path_to_fmultiple_contigs, path_to_fno_match)
