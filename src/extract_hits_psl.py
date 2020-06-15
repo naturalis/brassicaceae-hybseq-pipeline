@@ -170,7 +170,7 @@ def create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictio
                 hit_exon = dictionary_hits[hit_contig].strip()
                 match_exon = dictionary_match[match_contig].strip()
                 if hit_exon == match_exon:
-                    path_to_fexon = path_to_mapped_exons_species_dir + hit_exon + '.txt'
+                    path_to_fexon = path_to_mapped_exons_species_dir + hit_exon + '.fasta'
                     if match_exon != temporary_exon:
                         create_ftxt(path_to_fexon)
                         write_fstat(path_to_fseq_exons, hit_contig, hit_exon)
@@ -199,6 +199,13 @@ def append_seq(sorted_dir_list, match_name, path_to_seq_dir, path_to_fexon):
                 exon_file.write(line)
             fseq.close()
             exon_file.close()
+
+
+def create_YAML(path):
+    f = open(path, "w+")
+    f.write("exons:\n")
+    f.close()
+    print(path + " is created")
 
 
 # # # Code starts here:
@@ -278,3 +285,22 @@ sorted_list_consensus_dir = natural_sort(list_consensus_dir)
 create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
                    path_to_mapped_exons_species_dir, path_to_fseq_exons, path_to_fexons_seq,
                    sorted_list_consensus_dir, path_to_consensus_dir, path_to_fmultiple_contigs, path_to_fno_match)
+
+
+'''STEP 5: Creates configuration files for MAFFT'''
+# creates configuration YAML file in envs MAFFT dir
+path_to_MAFFT_configs = "./envs/MAFFT/"
+create_dir(path_to_MAFFT_configs)
+path_to_fYAML = path_to_MAFFT_configs + SAMPLE_NAME + ".yaml"
+create_YAML(path_to_fYAML)
+
+with open(path_to_fseq_exons, "rt") as fseq_exons:
+    for line in fseq_exons:
+        contig_name, exon_name = line.split("\t")
+        exon_name = exon_name.strip()
+        fYAML = open(path_to_fYAML, "a+")
+        fYAML.write("    " + exon_name + ": " + path_to_mapped_exons_species_dir + exon_name + ".fasta\n")
+        fYAML.close()
+fseq_exons.close()
+
+
