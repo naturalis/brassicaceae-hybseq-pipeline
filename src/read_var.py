@@ -1,11 +1,15 @@
 #!/usr/bin/python
 # This script is to read lines in var file after the VARscan step and to make a consensus sequence
-# It loops through every contig in every species_name file and stores the sequence, number of SNPs and avcov of
+# It loops through every contig in every SAMPLE_NAME file and stores the sequence, number of SNPs and avcov of
 # every contig
+# It is used by giving the script the sample name as input argument, for example: $ python read_var.py SRR8528336
 # Made by: Elfy Ly
 # Date: 28 May 2020
 
+import sys
 import os
+
+SAMPLE_NAME = sys.argv[1]
 
 
 def count_contigs(path_to_var_dir):
@@ -96,34 +100,31 @@ def append_empty_contigs(path_to_consensus_species_dir, contig_number):
 
 # Code starts here
 path_to_mapped_contigs_dir = "./results/mapped_contigs/"
+path_to_var_dir = path_to_mapped_contigs_dir + SAMPLE_NAME + "/var/"
+n_contig_files = count_contigs(path_to_var_dir)
 
-dirs = os.listdir(path_to_mapped_contigs_dir)
-for species_name in dirs:
-    path_to_var_dir = path_to_mapped_contigs_dir + species_name + "/var/"
-    n_contig_files = count_contigs(path_to_var_dir)
+# Create consensus directory en file for every species if it doesn't exist
+path_to_consensus_dir = "./results/consensus_contigs/"
+path_to_consensus_species_dir = path_to_consensus_dir + SAMPLE_NAME + "/"
 
-    # Create consensus directory en file for every species if it doesn't exist
-    path_to_consensus_dir = "./results/consensus/"
-    path_to_consensus_species_dir = path_to_consensus_dir + species_name + "/"
+create_dir(path_to_consensus_dir)
+create_dir(path_to_consensus_species_dir)
+create_fconsensus(path_to_consensus_species_dir)
+create_file_empty(path_to_consensus_species_dir)
 
-    create_dir(path_to_consensus_dir)
-    create_dir(path_to_consensus_species_dir)
-    create_fconsensus(path_to_consensus_species_dir)
-    create_file_empty(path_to_consensus_species_dir)
+# Loops through all contig files for each species
+ncontigs_after_VARscan = 0
+for contig_number in range(1, n_contig_files + 1):
+    fvar_name = "Contig" + str(contig_number) + "_AT_sort.var"
+    path_to_fvar = path_to_var_dir + fvar_name
 
-    # Loops through all contig files for each species
-    ncontigs_after_VARscan = 0
-    for contig_number in range(1, n_contig_files + 1):
-        fvar_name = "Contig" + str(contig_number) + "_AT_sort.var"
-        path_to_fvar = path_to_var_dir + fvar_name
+    seq = ""
+    seq = calculate_var_stats(path_to_fvar, seq)
+    seq_length = len(seq)
+    # print("seq length: " + str(seq_length))
 
-        seq = ""
-        seq = calculate_var_stats(path_to_fvar, seq)
-        seq_length = len(seq)
-        # print("seq length: " + str(seq_length))
+    ncontigs_after_VARscan = make_consensus(seq_length, path_to_consensus_species_dir, contig_number, seq,
+                                            ncontigs_after_VARscan)
 
-        ncontigs_after_VARscan = make_consensus(seq_length, path_to_consensus_species_dir, contig_number, seq,
-                                                ncontigs_after_VARscan)
-
-    # Prints number of contig files created after VARscan (some files are empty after VARscan)
-    print("contigs after VARscan: " + str(ncontigs_after_VARscan))
+# Prints number of contig files created after VARscan (some files are empty after VARscan)
+print("contigs after VARscan: " + str(ncontigs_after_VARscan))
