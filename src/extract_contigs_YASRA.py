@@ -1,6 +1,6 @@
 # extract_contigs_YASRA.py
 # This script is to extract contigs and to create SAM files with headers for each of them after running YASRA.
-# YASRA creates a SAM file without header after mapping.
+# YASRA creates a SAM file without header after alignments.
 # This can be executed by running: $ python extract_contigs_YASRA.py [SAMPLE_NAME], for example:
 # $ python extract_contigs_YASRA.py SRR8528336
 # Made by: Elfy Ly
@@ -56,8 +56,8 @@ def count_save_stats(path_to_sam, nreads, ncontigs):
 
 '''Code starts here'''
 # Creating paths for output directory
-path_to_YASRA_dir = './results/mapping/' + SPECIES_NAME + "/YASRA_related_files/"
-path_to_YASRA_fSAM = path_to_YASRA_dir + 'mapping_' + SPECIES_NAME + '_reads.fq_ref-at.fasta.sam'
+path_to_YASRA_dir = './results/alignments/' + SPECIES_NAME + "/YASRA_related_files/"
+path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_' + SPECIES_NAME + '_reads.fq_ref-at.fasta.sam'
 path_to_mapped_contigs = './results/mapped_contigs/'
 path_to_species = path_to_mapped_contigs + SPECIES_NAME + '/'
 path_to_sam = path_to_species + 'sam/'
