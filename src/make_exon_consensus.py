@@ -119,6 +119,7 @@ for fassembled_exon in sorted_assembled_exon_dir:
     cons_dict = append_dict(path_to_fassembled_exon, seq_length, cons_dict)
 
     consensus_seq = make_consensus(seq_length, cons_dict)
+    consensus_seq = consensus_seq.replace("-", "")
 
     path_to_fconsensus_exon = path_to_consensus_exons_species_dir + fassembled_exon
     exon_name, fasta = fassembled_exon.split(".fasta")
