@@ -9,7 +9,7 @@
 import sys
 import os
 
-SPECIES_NAME = sys.argv[1]
+SAMPLE_NAME = sys.argv[1]
 
 
 # Create directory of given path if it doesn't exist
@@ -55,11 +55,24 @@ def count_save_stats(path_to_sam, nreads, ncontigs):
 
 
 '''Code starts here'''
+# Change YASRA output dir name
+path_to_alignments_dir = './results/alignments/'
+path_to_alignments_sample_dir = path_to_alignments_dir + SAMPLE_NAME + "/"
+create_dir(path_to_alignments_dir)
+create_dir(path_to_alignments_sample_dir)
+
+current_dir = os.path.abspath(os.getcwd())
+list_current_dir = os.listdir(current_dir)
+for dir in list_current_dir:
+    if SAMPLE_NAME in dir:
+        old_path_output = "./" + dir + "/"
+        os.rename(old_path_output, path_to_alignments_sample_dir)
+
 # Creating paths for output directory
-path_to_YASRA_dir = './results/alignments/' + SPECIES_NAME + "/YASRA_related_files/"
-path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_' + SPECIES_NAME + '_reads.fq_ref-at.fasta.sam'
+path_to_YASRA_dir = path_to_alignments_sample_dir + "YASRA_related_files/"
+path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_' + SAMPLE_NAME + '_reads.fq_ref-at.fasta.sam'
 path_to_mapped_contigs = './results/mapped_contigs/'
-path_to_species = path_to_mapped_contigs + SPECIES_NAME + '/'
+path_to_species = path_to_mapped_contigs + SAMPLE_NAME + '/'
 path_to_sam = path_to_species + 'sam/'
 
 create_dir(path_to_mapped_contigs)
@@ -67,7 +80,7 @@ create_dir(path_to_species)
 create_dir(path_to_sam)
 
 # Creates assembled contig list and dictionary for start and end position
-path_to_final_assembly = path_to_YASRA_dir + 'Final_Assembly_' + SPECIES_NAME + '_reads.fq_ref-at.fasta'
+path_to_final_assembly = path_to_YASRA_dir + 'Final_Assembly_' + SAMPLE_NAME + '_reads.fq_ref-at.fasta'
 path_to_fmapped_contigs = path_to_species + "mapped_contigs.txt"
 
 create_mapped_contig_list(path_to_final_assembly, path_to_fmapped_contigs)
