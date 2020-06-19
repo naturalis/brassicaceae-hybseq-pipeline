@@ -12,67 +12,70 @@ For Windows 10:
 
 ---
 
-1) Download the 2 FastQ (FTP) (fastq.gz) files of SRR8528336 in BioProject PRJNA518905 from:
-https://www.ebi.ac.uk/ena/data/view/SRX5331770 by:
-- Create the path by:
-`$ mkdir data/raw_reads/SRR8528336/`
-- Go to this path by:
-`$ cd data/raw_reads/SRR8528336/`
-- Download the files by running the command:
+## Get raw reads
+Download the 2 FastQ (FTP) (fastq.gz) files of the samples you like from https://www.ebi.ac.uk/ena/browse.
+For example: SRR8528336 in BioProject PRJNA518905 from https://www.ebi.ac.uk/ena/data/view/SRR8528336 by:
+1) Go to the data dir by:
+`$ cd data/`
+2) Create the raw_reads directories by:
+`$ mkdir raw_reads
+3) Go to this path by:
+`$ cd raw_reads`
+4) Get the .fastq.gz files for the forward (1) and reverse (2) paired end reads by copying the link adress of FASTQ files (FTP). 
+Download the files by running the command:
 `$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR852/006/SRR8528336/SRR8528336_1.fastq.gz`
 `$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR852/006/SRR8528336/SRR8528336_2.fastq.gz` 
-- At the end you should get:
-./data/raw_reads/SRR8528336/SRR8528336_1.fastq.gz and ./data/raw_reads/SRR8528336/SRR8528336_2.fastq.gz 
-These are paired end reads: forward (1) and reverse (2)
-- Go back to the main folder.
+5) After downloading you should get the paths:
+./data/raw_reads/SRR8528336_1.fastq.gz and ./data/raw_reads/SRR8528336_2.fastq.gz 
+6) Go back to the main folder
+`$ cd ~/brassicaceae-hybseq-pipeline/`
 
-2) Download the sequence genome Arabidopsis lyrata subsp. lyrata (GCA_000004255.1) from:
+## Get sequenced genome
+Download the sequence genome Arabidopsis lyrata subsp. lyrata (GCA_000004255.1) from:
 https://www.ncbi.nlm.nih.gov/assembly/GCF_000004255.2
-- By creating a new path:
+1) By creating a new path:
 `$ data/sequence_genomes`
-- Go to this path:
+2) Go to this path:
 `$ cd data/sequence_genomes/download`
-- Download list of all GenBank files:
+3) Download list of all GenBank files:
 `$ wget ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_genbank.txt`
-- Get the download link of the correct genome and save this in ftp_folder.txt by:
+4) Get the download link of the correct genome and save this in ftp_folder.txt by:
 `$ grep -E 'GCF_000004255.2' assembly_summary_genbank.txt | cut -f 20 > ftp_folder.txt`
-- Create folder and script to save the links:
+5) Create folder and script to save the links:
 `awk 'BEGIN{FS=OFS="/";filesuffix="genomic.fna.gz"}{ftpdir=$0;asm=$10;file=asm"_"filesuffix;print "wget "ftpdir,file}' ftp_folder.txt > download_fna_files.sh`
-- Download the sequence genome by:
+6) Download the sequence genome by:
 `$ source download_fna_files.sh`
-- Unpack the .gz file by: (is not necessary)
+7) Unpack the .gz file by: (is not necessary)
 `$ gunzip GCA_000004255.1_v.1.0_genomic.fna.gz`
-- Change the .fna file to arl_ref.fa file and move this file back to the sequence_genomes directory by:
+8) Change the .fna file to arl_ref.fa file and move this file back to the sequence_genomes directory by:
 `$ mv GCA_000004255.1_v.1.0_genomic.fna ../arl_ref.fa`
 
-3) Install and download the necessary software packages for this project written in brassicaceae-hybseq-pipeline.yaml. 
+## Create and activate environment
+1) Install and download the necessary software packages for this project written in brassicaceae-hybseq-pipeline.yaml. 
 Create the environment by running the following command in the main folder:
 `$ conda env create -f ./envs/brassicaceae-hybseq-pipeline.yaml`
-
-4) Activate this environment by:
+2) Activate this environment by:
 `$ conda activate brassicaceae-hybseq-pipeline`
 
-Download alignreads.py:		# alignreads.py is currently installed in /usr/local/src/alignreads
-
-5) Go to the ./src folder
-
-6) Install alignreads folder directory by running: 
+## Download alignreads.py
+# alignreads.py is currently installed in /usr/local/src/alignreads
+1) Go to the ./src folder
+2) Install alignreads folder directory by running: 
 `$ git clone https://github.com/zachary-foster/alignreads`
-
-7) Install the software packages by running the command:
+3) Install the software packages by running the command:
 `$ python ./alignreads/install.py ./installed_alignreads`
-choose the recommended versions:
+4) choose the recommended versions:
 (8) lastz-1.03.02.tar.gz
 (1) YASRA-2.33.tar.gz
 (1) mummer 3.23
-
-8) Go back to the main folder
-
-9) To only use 'alignreads' instead of calling the python file, run the command:
+5) Go back to the main folder
+6) To only use 'alignreads' instead of calling the python file, run the command:
 `$ export PATH="$PATH:./src/installed_alignreads/alignreads"`
+# at this moment: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads
 This is necessary for the use of Snakemake
 
-10) In the main folder where the Snakefile is, run the Snakefile with the command:
+## Run snakemake
+1) In the main folder where the Snakefile is, run the Snakefile with the command:
 `$ snakemake`
 
 
