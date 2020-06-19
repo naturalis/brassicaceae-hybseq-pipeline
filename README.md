@@ -18,7 +18,7 @@ For example: SRR8528336 in BioProject PRJNA518905 from https://www.ebi.ac.uk/ena
 1) Go to the data dir by:
 `$ cd data/`
 2) Create the raw_reads directories by:
-`$ mkdir raw_reads
+`$ mkdir raw_reads`
 3) Go to this path by:
 `$ cd raw_reads`
 4) Get the .fastq.gz files for the forward (1) and reverse (2) paired end reads by copying the link adress of FASTQ files (FTP). 
