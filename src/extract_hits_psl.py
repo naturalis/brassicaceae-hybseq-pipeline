@@ -24,8 +24,8 @@ def create_fhits(path_to_fhits):
 
 def natural_sort(l):
     convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
-    return sorted(l, key = alphanum_key)
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    return sorted(l, key=alphanum_key)
 
 
 def create_ftxt(path):
@@ -209,7 +209,7 @@ def create_YAML(path):
 
 
 # # # Code starts here:
-path_to_mapped_contigs_dir = "results/mapped_contigs/"
+path_to_mapped_contigs_dir = "results/4_mapped_contigs/"
 
 '''STEP 1: Checks all fragment overlaps between contigs and exons'''
 # creates separate dictionary for mapped contigs and target exons with their start and end position
@@ -223,7 +223,7 @@ dictionary_exons_lsorted = natural_sort(dictionary_exons)
 
 # add matching pairs in contig_exon_match_list.txt if mapped contig fragments matches/overlaps
 # with the exon fragments
-path_to_blat_species_dir = "./results/blat/" + SAMPLE_NAME + "/"
+path_to_blat_species_dir = "./results/6_identified_contigs_blat/" + SAMPLE_NAME + "/"
 path_to_blat_stats = path_to_blat_species_dir + "stats/"
 create_dir(path_to_blat_stats)
 
@@ -261,7 +261,7 @@ dictionary_hits_lsorted = natural_sort(dictionary_hits)
 dictionary_match_lsorted = natural_sort(dictionary_match)
 
 # create new mapped_exons dir for input
-path_to_mapped_exons = './results/mapped_exons/'
+path_to_mapped_exons = './results/7_mapped_exons/'
 path_to_mapped_exons_species_dir = path_to_mapped_exons + SAMPLE_NAME + "/"
 create_dir(path_to_mapped_exons)
 create_dir(path_to_mapped_exons_species_dir)
@@ -278,14 +278,13 @@ create_ftxt(path_to_fmultiple_contigs)
 
 # create path to append original exon and consensus sequences to the exon fasta files as MAFFT input
 path_to_fexons_seq = "./data/exons/exons_AT.fasta"
-path_to_consensus_dir = "./results/consensus_contigs/" + SAMPLE_NAME + "/"
+path_to_consensus_dir = "./results/5_consensus_contigs/" + SAMPLE_NAME + "/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_list_consensus_dir = natural_sort(list_consensus_dir)
 
 create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary_hits, dictionary_match,
                    path_to_mapped_exons_species_dir, path_to_fseq_exons, path_to_fexons_seq,
                    sorted_list_consensus_dir, path_to_consensus_dir, path_to_fmultiple_contigs, path_to_fno_match)
-
 
 '''STEP 5: Creates configuration files for MAFFT'''
 # creates configuration YAML file in envs MAFFT dir
@@ -302,5 +301,3 @@ with open(path_to_fseq_exons, "rt") as fseq_exons:
         fYAML.write("    " + exon_name + ": " + path_to_mapped_exons_species_dir + exon_name + ".fasta\n")
         fYAML.close()
 fseq_exons.close()
-
-

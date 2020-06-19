@@ -99,12 +99,12 @@ def append_empty_contigs(path_to_consensus_species_dir, contig_number):
 
 
 # Code starts here
-path_to_mapped_contigs_dir = "./results/mapped_contigs/"
+path_to_mapped_contigs_dir = "./results/4_mapped_contigs/"
 path_to_var_dir = path_to_mapped_contigs_dir + SAMPLE_NAME + "/var/"
 n_contig_files = count_contigs(path_to_var_dir)
 
 # Create consensus directory en file for every species if it doesn't exist
-path_to_consensus_dir = "./results/consensus_contigs/"
+path_to_consensus_dir = "./results/5_consensus_contigs/"
 path_to_consensus_species_dir = path_to_consensus_dir + SAMPLE_NAME + "/"
 
 create_dir(path_to_consensus_dir)

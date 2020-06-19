@@ -13,10 +13,10 @@ CONTIG_NRS = range(1, CONTIGS_MAPPED + 1)   #["1", "2", "3"]
 
 # all variables within snakemake
 # raw_reads_samples = expand("data/raw_reads/{samples}_count_reads.txt", samples = SAMPLES)
-deduplication_variables = expand("results/deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}_dedupl.fq", frpu = FRPU)
-var_variables = expand("results/mapped_contigs/"+ SAMPLE_NAME + "/var/Contig{nr}_AT_sort.var", nr = CONTIG_NRS)
-blat_variables = expand("results/blat/"+ SAMPLE_NAME + "/contig{nr}_AT.psl", nr = CONTIG_NRS)
-# mafft_variables = expand("results/assembled_exons/"+ SAMPLE_NAME + "/{exon}.fasta", exon=config["exons"])
+deduplication_variables = expand("results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}_dedupl.fq", frpu = FRPU)
+var_variables = expand("results/4_mapped_contigs/"+ SAMPLE_NAME + "/var/Contig{nr}_AT_sort.var", nr = CONTIG_NRS)
+blat_variables = expand("results/6_identified_contigs_blat/"+ SAMPLE_NAME + "/contig{nr}_AT.psl", nr = CONTIG_NRS)
+# mafft_variables = expand("results/8_assembled_exons/"+ SAMPLE_NAME + "/{exon}.fasta", exon=config["exons"])
 
 
 rule all:
@@ -42,7 +42,7 @@ rule trimming:
         "data/raw_reads/"+ SAMPLE_NAME + "_1.fastq",
         "data/raw_reads/"+ SAMPLE_NAME + "_2.fastq"
     output:
-        expand("results/trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}.fq", FRPU = FRPU)
+        expand("results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}.fq", FRPU = FRPU)
     shell:
         "trimmomatic PE -phred33 {input} {output} "
         "ILLUMINACLIP:trimmomatic_adapter/TruSeq3-PE-2.fa:2:30:10 "
@@ -53,33 +53,33 @@ rule trimming:
 
 rule count_reads_trimming:
     input:
-        expand("results/trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}.fq", FRPU = FRPU)
+        expand("results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}.fq", FRPU = FRPU)
     output:
-        "results/trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_count_reads.txt"
+        "results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_count_reads.txt"
     shell:
         "echo $(cat {input} | wc -l)/4|bc >> {output}"
 
 rule deduplication:
     input:
-        "results/trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}.fq"
+        "results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}.fq"
     output:
-        "results/deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}_dedupl.fq"
+        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}_dedupl.fq"
     shell:
         "fastx_collapser -v -i {input} -o {output}"
 
 rule combine:
     input:
-        expand("results/deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}_dedupl.fq", FRPU = FRPU)
+        expand("results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}_dedupl.fq", FRPU = FRPU)
     output:
-        "results/deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq"
+        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq"
     shell:
          "cat {input} > {output}"
 
 rule count_reads_deduplication:
     input:
-        "results/deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq"
+        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq"
     output:
-        "results/deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_count_reads.txt"
+        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_count_reads.txt"
     shell:
         "grep '>' {input} | wc -l > {output}"
 
@@ -87,10 +87,10 @@ rule count_reads_deduplication:
 # make sure to: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads"
 rule alignreads:
     input:
-        "results/deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq",
+        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq",
         "data/reference_genomes/ref-at.fasta"
     output:
-        "results/alignments/" + SAMPLE_NAME
+        "results/3_mapped_reads/" + SAMPLE_NAME
     shell:
         "alignreads {input} "
         "--single-step "
@@ -110,33 +110,33 @@ rule extract_contigs:
 
 rule convert_to_fBAM:
     input:
-        "results/mapped_contigs/"+ SAMPLE_NAME + "/sam/Contig{nr}_AT.sam"
+        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/sam/Contig{nr}_AT.sam"
     output:
-        temp("results/mapped_contigs/"+ SAMPLE_NAME + "/bam/Contig{nr}_AT.bam")
+        temp("results/4_mapped_contigs/"+ SAMPLE_NAME + "/bam/Contig{nr}_AT.bam")
     shell:
         "samtools view -bS {input} > {output}"
 
 rule sort_fBAM:
     input:
-        "results/mapped_contigs/"+ SAMPLE_NAME + "/bam/Contig{nr}_AT.bam"
+        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/bam/Contig{nr}_AT.bam"
     output:
-        temp("results/mapped_contigs/"+ SAMPLE_NAME + "/sorted_bam/Contig{nr}_AT_sort.bam")
+        temp("results/4_mapped_contigs/"+ SAMPLE_NAME + "/sorted_bam/Contig{nr}_AT_sort.bam")
     shell:
         "samtools sort -m5G {input} -o {output}"
 
 rule convert_to_fpileup:
     input:
-        "results/mapped_contigs/"+ SAMPLE_NAME + "/sorted_bam/Contig{nr}_AT_sort.bam"
+        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/sorted_bam/Contig{nr}_AT_sort.bam"
     output:
-        "results/mapped_contigs/"+ SAMPLE_NAME + "/pileup/Contig{nr}_AT_sort.pileup"
+        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/pileup/Contig{nr}_AT_sort.pileup"
     shell:
         "samtools mpileup -B {input} > {output}"
 
 rule SNP_calling:
     input:
-        "results/mapped_contigs/"+ SAMPLE_NAME + "/pileup/Contig{nr}_AT_sort.pileup"
+        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/pileup/Contig{nr}_AT_sort.pileup"
     output:
-        "results/mapped_contigs/"+ SAMPLE_NAME + "/var/Contig{nr}_AT_sort.var"
+        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/var/Contig{nr}_AT_sort.var"
     shell:
         "varscan pileup2cns {input} "
         "--min-freq-for-hom 0.6 "
@@ -155,9 +155,9 @@ rule make_contig_consensus:
 rule BLAT_assembled:
     input:
         "data/exons/exons_AT.fasta",
-        "results/consensus_contigs/"+ SAMPLE_NAME + "/Contig{nr}.txt"
+        "results/5_consensus_contigs/"+ SAMPLE_NAME + "/Contig{nr}.txt"
     output:
-        "results/blat/"+ SAMPLE_NAME + "/contig{nr}_AT.psl"
+        "results/6_identified_contigs_blat/"+ SAMPLE_NAME + "/contig{nr}_AT.psl"
     shell:
         "blat "
         "-t=dnax "
@@ -176,9 +176,9 @@ rule extract_hits_psl:
 
 rule MAFFT_assembly:
     input:
-        "results/mapped_exons/"+ SAMPLE_NAME + "/{exon}.fasta"
+        "results/7_mapped_exons/"+ SAMPLE_NAME + "/{exon}.fasta"
     output:
-        "results/assembled_exons/"+ SAMPLE_NAME + "/{exon}.fasta"
+        "results/8_assembled_exons/"+ SAMPLE_NAME + "/{exon}.fasta"
     shell:
         "mafft "
         "--maxiterate 1000 "

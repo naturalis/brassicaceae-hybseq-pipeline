@@ -56,22 +56,22 @@ def count_save_stats(path_to_sam, nreads, ncontigs):
 
 '''Code starts here'''
 # Change YASRA output dir name
-path_to_alignments_dir = './results/alignments/'
-path_to_alignments_sample_dir = path_to_alignments_dir + SAMPLE_NAME + "/"
-create_dir(path_to_alignments_dir)
-create_dir(path_to_alignments_sample_dir)
+path_to_mapped_reads_dir = './results/3_mapped_reads/'
+path_to_mapped_reads_sample_dir = path_to_mapped_reads_dir + SAMPLE_NAME + "/"
+create_dir(path_to_mapped_reads_dir)
+create_dir(path_to_mapped_reads_sample_dir)
 
 current_dir = os.path.abspath(os.getcwd())
 list_current_dir = os.listdir(current_dir)
 for dir in list_current_dir:
     if SAMPLE_NAME in dir:
         old_path_output = "./" + dir + "/"
-        os.rename(old_path_output, path_to_alignments_sample_dir)
+        os.rename(old_path_output, path_to_mapped_reads_sample_dir)
 
 # Creating paths for output directory
-path_to_YASRA_dir = path_to_alignments_sample_dir + "YASRA_related_files/"
+path_to_YASRA_dir = path_to_mapped_reads_sample_dir + "YASRA_related_files/"
 path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_' + SAMPLE_NAME + '_reads.fq_ref-at.fasta.sam'
-path_to_mapped_contigs = './results/mapped_contigs/'
+path_to_mapped_contigs = './results/4_mapped_contigs/'
 path_to_species = path_to_mapped_contigs + SAMPLE_NAME + '/'
 path_to_sam = path_to_species + 'sam/'
 
