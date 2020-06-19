@@ -25,8 +25,9 @@ For example: SRR8528336 in BioProject PRJNA518905 from https://www.ebi.ac.uk/ena
 Download the files by running the command:
 `$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR852/006/SRR8528336/SRR8528336_1.fastq.gz`
 `$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR852/006/SRR8528336/SRR8528336_2.fastq.gz` 
-5) After downloading you should get the paths:
-./data/raw_reads/SRR8528336_1.fastq.gz and ./data/raw_reads/SRR8528336_2.fastq.gz 
+5) Unpack these files by:
+`$ gunzip SRR8528336_1.fastq.gz` 
+`$ gunzip SRR8528336_2.fastq.gz`
 6) Go back to the main folder
 `$ cd ~/brassicaceae-hybseq-pipeline/`
 
