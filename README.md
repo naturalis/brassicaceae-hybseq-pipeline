@@ -58,7 +58,7 @@ Create the environment by running the following command in the main folder:
 `$ conda activate brassicaceae-hybseq-pipeline`
 
 ## Download alignreads.py
-# alignreads.py is currently installed in /usr/local/src/alignreads
+(alignreads.py is currently installed in /usr/local/src/alignreads)
 1) Go to the ./src folder
 2) Install alignreads folder directory by running: 
 `$ git clone https://github.com/zachary-foster/alignreads`
@@ -71,8 +71,9 @@ Create the environment by running the following command in the main folder:
 5) Go back to the main folder
 6) To only use 'alignreads' instead of calling the python file, run the command:
 `$ export PATH="$PATH:./src/installed_alignreads/alignreads"`
-# at this moment: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads
 This is necessary for the use of Snakemake
+(at this moment: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads)
+
 
 ## Run snakemake
 1) In the main folder where the Snakefile is, run the Snakefile with the command:
