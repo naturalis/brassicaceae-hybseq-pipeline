@@ -54,6 +54,13 @@ def count_save_stats(path_to_sam, nreads, ncontigs):
     f.close()
 
 
+def create_YAML(path):
+    f = open(path, "w+")
+    f.write("contig_nrs:\n")
+    f.close()
+    print(path + " is created")
+
+
 '''Code starts here'''
 # Change YASRA output dir name
 path_to_mapped_reads_dir = './results/3_mapped_reads/'
@@ -108,3 +115,20 @@ with open(path_to_YASRA_fSAM, 'rt') as myfile:
                 write_to_fSAM(path_to_sam, contig_number, reference_genome, myline)
 
     count_save_stats(path_to_sam, nreads, ncontigs)
+
+# creates configuration YAML file in envs contigs dir
+path_to_contigs_configs = "./envs/contigs/"
+create_dir(path_to_contigs_configs)
+path_to_fYAML = path_to_contigs_configs + SAMPLE_NAME + ".yaml"
+create_YAML(path_to_fYAML)
+
+for ncontig in range(1, ncontigs + 1):
+    path_to_fvar = path_to_species + "var/Contig" + str(ncontig) + "_AT_sort.var"
+    fYAML = open(path_to_fYAML, "a+")
+    fYAML.write("    " + str(ncontig) + ": " + path_to_fvar + "\n")
+    fYAML.close()
+
+
+
+
+
