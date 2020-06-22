@@ -1,27 +1,22 @@
 # variables for every species
-SAMPLES = ["SRR8528336", "SRR8528337", "SRR8528338"]
-SAMPLE_NAME = "SRR8528336"
+SAMPLES = ["SRR8528336", "SRR8528337", "SRR8528338", "SRR8528339", "SRR8528340", "SRR8528341"]
+SAMPLE_NAME = "SRR8528339"
 
 #forward or reverse | paired or unpaired
 FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
 
-# variables within contigs: should be range(1, ALL CONTIG FILES IN DIR (FOR EVERY SPECIES))
-CONTIGS_MAPPED = 2146 #1905 for SRR8528337   #2113 for SRR8528336
-CONTIG_NRS = range(1, CONTIGS_MAPPED + 1)   #["1", "2", "3"]
-
+configfile: "./envs/contigs/" + SAMPLE_NAME + ".yaml"
 # configfile: "./envs/MAFFT/" + SAMPLE_NAME + ".yaml"
 
 # all variables within snakemake
 # raw_reads_samples = expand("data/raw_reads/{samples}_count_reads.txt", samples = SAMPLES)
-deduplication_variables = expand("results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}_dedupl.fq", frpu = FRPU)
-var_variables = expand("results/4_mapped_contigs/"+ SAMPLE_NAME + "/var/Contig{nr}_AT_sort.var", nr = CONTIG_NRS)
-blat_variables = expand("results/6_identified_contigs_blat/"+ SAMPLE_NAME + "/contig{nr}_AT.psl", nr = CONTIG_NRS)
+var_variables = expand("results/4_mapped_contigs/"+ SAMPLE_NAME + "/var/Contig{nr}_AT_sort.var", nr = config["contig_nrs"])
+#blat_variables = expand("results/6_identified_contigs_blat/"+ SAMPLE_NAME + "/contig{nr}_AT.psl", nr = config["contig_nrs"])
 # mafft_variables = expand("results/8_assembled_exons/"+ SAMPLE_NAME + "/{exon}.fasta", exon=config["exons"])
 
 
 rule all:
     input:
-        # deduplication_variables
         var_variables
         # blat_variables
         # mafft_variables
@@ -36,7 +31,6 @@ rule count_raw_reads:
         "echo $(cat {input.forward} | grep '@SRR' | wc -l) + $(cat {input.reverse} | grep '@SRR' | wc -l) | "
         "bc > {output}"
 
-# preprocessing raw reads before alignment
 rule trimming:
     input:
         "data/raw_reads/"+ SAMPLE_NAME + "_1.fastq",
@@ -89,8 +83,6 @@ rule alignreads:
     input:
         "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq",
         "data/reference_genomes/ref-at.fasta"
-    output:
-        "results/3_mapped_reads/" + SAMPLE_NAME
     shell:
         "alignreads {input} "
         "--single-step "
@@ -99,7 +91,6 @@ rule alignreads:
         "--percent-identity medium "
         "--depth-position-masking 5- "
         "--proportion-base-filter 0.7-"
-        "--output-directory {output}"
 
 # extract contigs from created SAM file after YASRA and create per contig new SAM files with headers
 rule extract_contigs:
@@ -108,6 +99,8 @@ rule extract_contigs:
     shell:
         "python3 {input} " + SAMPLE_NAME
 
+
+''' 2nd round snakemake'''
 rule convert_to_fBAM:
     input:
         "results/4_mapped_contigs/"+ SAMPLE_NAME + "/sam/Contig{nr}_AT.sam"
@@ -152,6 +145,8 @@ rule make_contig_consensus:
     shell:
         "python3 {input} " + SAMPLE_NAME
 
+
+'''3rd round snakemake'''
 rule BLAT_assembled:
     input:
         "data/exons/exons_AT.fasta",
@@ -174,6 +169,7 @@ rule extract_hits_psl:
     shell:
         "python3 {input} " + SAMPLE_NAME
 
+'''4rd round snakemake'''
 rule MAFFT_assembly:
     input:
         "results/7_mapped_exons/"+ SAMPLE_NAME + "/{exon}.fasta"
