@@ -28,7 +28,7 @@ rule convert_to_fpileup:
     input:
         "results/4_mapped_contigs/"+ SAMPLE_NAME + "/sorted_bam/Contig{nr}_AT_sort.bam"
     output:
-        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/pileup/Contig{nr}_AT_sort.pileup"
+        temp("results/4_mapped_contigs/"+ SAMPLE_NAME + "/pileup/Contig{nr}_AT_sort.pileup")
     shell:
         "samtools mpileup -B {input} > {output}"
 

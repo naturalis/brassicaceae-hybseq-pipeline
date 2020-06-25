@@ -20,7 +20,7 @@ rule trimming:
         "data/raw_reads/"+ SAMPLE_NAME + "_1.fastq",
         "data/raw_reads/"+ SAMPLE_NAME + "_2.fastq"
     output:
-        expand("results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}.fq", FRPU = FRPU)
+        temp(expand("results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}.fq", FRPU = FRPU))
     shell:
         "trimmomatic PE -phred33 {input} {output} "
         "ILLUMINACLIP:trimmomatic_adapter/TruSeq3-PE-2.fa:2:30:10 "
@@ -41,7 +41,7 @@ rule deduplication:
     input:
         "results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}.fq"
     output:
-        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}_dedupl.fq"
+        temp("results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}_dedupl.fq")
     shell:
         "fastx_collapser -v -i {input} -o {output}"
 
