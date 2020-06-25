@@ -277,7 +277,7 @@ create_ftxt(path_to_fno_match)
 create_ftxt(path_to_fmultiple_contigs)
 
 # create path to append original exon and consensus sequences to the exon fasta files as MAFFT input
-path_to_fexons_seq = "./data/exons/exons_AT.fasta"
+path_to_fexons_seq = "./data/exons/ref-at_orf.fasta"
 path_to_consensus_dir = "./results/5_consensus_contigs/" + SAMPLE_NAME + "/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_list_consensus_dir = natural_sort(list_consensus_dir)
