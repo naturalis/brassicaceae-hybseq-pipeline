@@ -93,9 +93,9 @@ def make_consensus(seq_length, cons_dict):
     return consensus_seq
 
 
-def create_fconsensus_exon(path_to_fconsensus_exon, exon_name):
+def create_fconsensus_exon(path_to_fconsensus_exon, consensus_seq):
     fconsensus_exon = open(path_to_fconsensus_exon, "w+")
-    fconsensus_exon.write(">" + exon_name + "\n")
+    fconsensus_exon.write(">" + SAMPLE_NAME + "\n")
     fconsensus_exon.write(consensus_seq + "\n")
     fconsensus_exon.close()
 
@@ -106,12 +106,12 @@ path_to_consensus_exons_species_dir = path_to_consensus_exons_dir + SAMPLE_NAME 
 create_dir(path_to_consensus_exons_dir)
 create_dir(path_to_consensus_exons_species_dir)
 
-path_to_assembled_exon_dir = "./results/8_assembled_exons/" + SAMPLE_NAME + "/"
-assembled_exon_dir = os.listdir(path_to_assembled_exon_dir)
-sorted_assembled_exon_dir = natural_sort(assembled_exon_dir)
+path_to_aligned_exon_dir = "./results/8_aligned_exons/" + SAMPLE_NAME + "/"
+aligned_exon_dir = os.listdir(path_to_aligned_exon_dir)
+sorted_assembled_exon_dir = natural_sort(aligned_exon_dir)
 consensus_dict = {}
 for fassembled_exon in sorted_assembled_exon_dir:
-    path_to_fassembled_exon = path_to_assembled_exon_dir + fassembled_exon
+    path_to_fassembled_exon = path_to_aligned_exon_dir + fassembled_exon
     ncontigs = 0
     cons_dict = {}
     seq_length = 0
@@ -123,4 +123,4 @@ for fassembled_exon in sorted_assembled_exon_dir:
 
     path_to_fconsensus_exon = path_to_consensus_exons_species_dir + fassembled_exon
     exon_name, fasta = fassembled_exon.split(".fasta")
-    create_fconsensus_exon(path_to_fconsensus_exon, exon_name)
+    create_fconsensus_exon(path_to_fconsensus_exon, consensus_seq)

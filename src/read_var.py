@@ -80,7 +80,7 @@ def append_fconsensus(path, contig_number, seq):
 
 
 def create_fcontig_consensus(path_to_consensus_species_dir, contig_number, seq):
-    f = open(path_to_consensus_species_dir + "Contig" + str(contig_number) + ".txt", "w+")
+    f = open(path_to_consensus_species_dir + "Contig" + str(contig_number) + ".fasta", "w+")
     # print("New text file created: " + "Contig" + str(contig_number) + ".txt")
     f.write(">Contig" + str(contig_number) + "\n" + seq + "\n")
     f.close()

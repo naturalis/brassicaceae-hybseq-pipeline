@@ -5,7 +5,8 @@
 # Date: 22 May 2020
 
 import sys
-import os, fnmatch
+import os
+import fnmatch
 import re
 from Bio import SearchIO
 from Bio import SeqIO
@@ -174,30 +175,33 @@ def create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictio
                     if match_exon != temporary_exon:
                         create_ftxt(path_to_fexon)
                         write_fstat(path_to_fseq_exons, hit_contig, hit_exon)
-                        for record in SeqIO.parse(path_to_fexons_seq, "fasta"):
-                            if hit_exon == record.id:
-                                fexon = open(path_to_fexon, "a+")
-                                fexon.write(">" + record.id + "\n")
-                                fexon.write(str(record.seq) + "\n")
-                        append_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
+                        append_exon_seq(path_to_fexons_seq, hit_exon, path_to_fexon)
+                        append_contig_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
                         temporary_exon = match_exon
                     elif match_exon == temporary_exon:
-                        append_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
+                        append_contig_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
                         write_fstat(path_to_fmultiple_contigs, hit_contig, hit_exon)
                 else:
                     write_fstat(path_to_fno_match, hit_contig, hit_exon)
 
 
-def append_seq(sorted_dir_list, match_name, path_to_seq_dir, path_to_fexon):
-    for name_file in sorted_dir_list:
-        name, txt = name_file.split('.')
-        if match_name == name:
-            path_to_fseq = path_to_seq_dir + name + '.txt'
-            fseq = open(path_to_fseq, 'rt')
+def append_exon_seq(path_to_fexons_seq, hit_exon, path_to_fexon):
+    for record in SeqIO.parse(path_to_fexons_seq, "fasta"):
+        if hit_exon == record.id:
+            fexon = open(path_to_fexon, "a+")
+            fexon.write(">" + record.id + "\n")
+            fexon.write(str(record.seq) + "\n")
+
+
+def append_contig_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon):
+    for name_file in sorted_list_consensus_dir:
+        name, fasta = name_file.split('.')
+        if hit_contig == name:
+            path_to_fseq = path_to_consensus_dir + name + '.fasta'
             exon_file = open(path_to_fexon, "a+")
-            for line in fseq:
-                exon_file.write(line)
-            fseq.close()
+            for record in SeqIO.parse(path_to_fseq, "fasta"):
+                exon_file.write(">" + record.id + "\n")
+                exon_file.write(str(record.seq) + "\n")
             exon_file.close()
 
 
@@ -252,6 +256,7 @@ create_fhits(path_to_fhighest_hits_filtered)
 create_ftxt(path_to_fbelow_cutoff)
 check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered, path_to_fbelow_cutoff)
 
+
 '''STEP 4: Check if highest_hits_filtered.txt matches are also overlapped fragments in contig_exon_match_list.txt
 If yes: creates new .fasta file for MAFFT input'''
 # create dictionaries for highest_hits_filtered.txt and contig_exon_match_list.txt
@@ -277,7 +282,7 @@ create_ftxt(path_to_fno_match)
 create_ftxt(path_to_fmultiple_contigs)
 
 # create path to append original exon and consensus sequences to the exon fasta files as MAFFT input
-path_to_fexons_seq = "./data/exons/ref-at_orf.fasta"
+path_to_fexons_seq = "./data/exons/exons_AT.fasta"
 path_to_consensus_dir = "./results/5_consensus_contigs/" + SAMPLE_NAME + "/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_list_consensus_dir = natural_sort(list_consensus_dir)
