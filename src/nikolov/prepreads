@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Script that prepares reads for short-read assembly using Trimmomatic/Fastx_collapse
+# Example: runpipe <read1> <read2> <file prefix> <path-to-data> 
+# Requires set TRIM_PATH, and fastx-tools in the executable path.
+
+# Common path to the reads database
+rdata_path=$4
+
+thread=4
+export OMP_NUM_THREADS=$thread
+read1=$1
+read2=$2
+pref=$3
+outdir=$(pwd)
+
+echo "Reads are stored in: $read1 $read2"
+echo "The files prefix is: $pref"
+echo "We work on: $thread threads"
+echo "Output will be on: $outdir" 
+
+# trim the reads
+echo "Trimming reads ..."
+java -Xmx10G -jar $TRIM_PATH/trimmomatic-0.33.jar PE -phred33 "$rdata_path/$read1" "$rdata_path/$read2" "${pref}_forward_trim_paired.fq" "${pref}_forward_trim_unpaired.fq" "${pref}_rev_trim_paired.fq" "${pref}_rev_trim_unpaired.fq" ILLUMINACLIP:$TRIM_PATH/adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:20 TRAILING:20 SLIDINGWINDOW:5:20 MINLEN:36
+
+# remove duplicate reads 
+fastx_collapser -v -i "${pref}_forward_trim_paired.fq" -o "${pref}_forward_trim_paired_dedupl.fq"
+fastx_collapser -v -i "${pref}_rev_trim_paired.fq" -o "${pref}_rev_trim_paired_dedupl.fq" 
+fastx_collapser -v -i "${pref}_forward_trim_unpaired.fq" -o "${pref}_forward_trim_unpaired_dedupl.fq"
+fastx_collapser -v -i "${pref}_rev_trim_unpaired.fq" -o "${pref}_rev_trim_unpaired_dedupl.fq"
+
+# remove intemediate files
+rm "${pref}_forward_trim_paired.fq" "${pref}_rev_trim_paired.fq" "${pref}_forward_trim_unpaired.fq" "${pref}_rev_trim_unpaired.fq"  
+
+# make a tar.gz file
+tar -czvf "${pref}_trim_dedupl.tar.gz" *.fq
+

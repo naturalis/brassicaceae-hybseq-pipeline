@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Script that codes the short-read assembly using Alignreads 
+# Example: runpipe <reference> <file prefix> 
+# Requires set TRIM_PATH, and fastx-tools and alignreads in the executable path.
+
+thread=1
+export OMP_NUM_THREADS=$thread
+ref=$1
+pref=$2
+outdir=$(pwd)
+
+# non-default options for alignreads
+depthmasking=5
+propbfilter=0.7
+percentidentity=medium
+
+echo "The reference is: $ref"
+echo "The files prefix is: $pref"
+echo "We work on: $thread threads"
+echo "Output will be on: $outdir" 
+
+# combine all reads in one file
+cat "../${pref}_forward_trim_paired_dedupl.fq" "../${pref}_rev_trim_paired_dedupl.fq" "../${pref}_forward_trim_unpaired_dedupl.fq" "../${pref}_rev_trim_unpaired_dedupl.fq" > "${pref}_reads.fq"
+
+# align using alignreads
+echo "Alignment ..."
+echo "Using alignreads"
+echo "Non-default parameters:"
+echo "Percent identity=${percentidentity}"
+echo "Depth-masking=${depthmasking}-"
+echo "Proportion-base-filter=${propbfilter}-"
+
+alignreads "${pref}_reads.fq" "$ref" --single-step --read-type solexa --read-orientation linear --percent-identity ${percentidentity} --depth-position-masking "${depthmasking}-" --proportion-base-filter "${propbfilter}-" 
+
+# remove the trimmed and de-duplicated reads
+rm "${pref}_reads.fq"
+touch "${pref}.fasta"
+
