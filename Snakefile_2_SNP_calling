@@ -1,42 +1,47 @@
 # variables for every species
-SAMPLES = ["SRR8528336", "SRR8528337", "SRR8528338", "SRR8528339", "SRR8528340", "SRR8528341"]
-SAMPLE_NAME = "SRR8528339"
+SAMPLES = "SRR8528338 SRR8528339 SRR8528340".split()
 
-var_variables = expand("results/4_mapped_contigs/"+ SAMPLE_NAME + "/var/Contig{nr}_AT_sort.var", nr = config["contig_nrs"])
+configfile: "./envs/contigs/{sample}.yaml"
+
+bam = expand("results/4_mapped_contigs/{sample}/bam/Contig{nr}_AT.bam", sample = SAMPLES, nr = config["contig_nrs"])
+var_variables = expand("results/4_mapped_contigs/{sample}/var/Contig{nr}_AT_sort.var", sample = SAMPLES, nr = config["contig_nrs"])
+make_contig_consensus = expand("results/5_consensus_contigs/{sample}", sample = SAMPLES)
 
 rule all:
     input:
+#        bam
         var_variables
+#        make_contig_consensus
 
 rule convert_to_fBAM:
     input:
-        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/sam/Contig{nr}_AT.sam"
+        "results/4_mapped_contigs/{{sample}}/sam/Contig{nr}_AT.sam"
     output:
-        temp("results/4_mapped_contigs/"+ SAMPLE_NAME + "/bam/Contig{nr}_AT.bam")
+        "results/4_mapped_contigs/{{sample}}/bam/Contig{nr}_AT.bam"
     shell:
         "samtools view -bS {input} > {output}"
 
 rule sort_fBAM:
     input:
-        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/bam/Contig{nr}_AT.bam"
+        "results/4_mapped_contigs/{{sample}}/bam/Contig{nr}_AT.bam"
     output:
-        temp("results/4_mapped_contigs/"+ SAMPLE_NAME + "/sorted_bam/Contig{nr}_AT_sort.bam")
+        "results/4_mapped_contigs/{{sample}}/sorted_bam/Contig{nr}_AT_sort.bam"
     shell:
         "samtools sort -m5G {input} -o {output}"
 
 rule convert_to_fpileup:
     input:
-        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/sorted_bam/Contig{nr}_AT_sort.bam"
+        "results/4_mapped_contigs/{{sample}}/sorted_bam/Contig{nr}_AT_sort.bam"
     output:
-        temp("results/4_mapped_contigs/"+ SAMPLE_NAME + "/pileup/Contig{nr}_AT_sort.pileup")
+        "results/4_mapped_contigs/{{sample}}/pileup/Contig{nr}_AT_sort.pileup"
     shell:
         "samtools mpileup -B {input} > {output}"
 
 rule SNP_calling:
     input:
-        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/pileup/Contig{nr}_AT_sort.pileup"
+        "results/4_mapped_contigs/{{sample}}/pileup/Contig{nr}_AT_sort.pileup"
     output:
-        "results/4_mapped_contigs/"+ SAMPLE_NAME + "/var/Contig{nr}_AT_sort.var"
+        "results/4_mapped_contigs/{{sample}}/var/Contig{nr}_AT_sort.var"
     shell:
         "varscan pileup2cns {input} "
         "--min-freq-for-hom 0.6 "
@@ -49,6 +54,10 @@ rule SNP_calling:
 rule make_contig_consensus:
     input:
         "src/read_var.py"
+    output:
+        "results/5_consensus_contigs/{sample}"
+    params:
+        "{sample}"
     shell:
-        "python3 {input} " + SAMPLE_NAME
+        "python3 {input} {params}"
 

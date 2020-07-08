@@ -1,26 +1,44 @@
 # variables for every species
-SAMPLES = ["SRR8528336", "SRR8528337", "SRR8528338", "SRR8528339", "SRR8528340", "SRR8528341"]
-SAMPLE_NAME = "SRR8528339"
+SAMPLES = "SRR8528338 SRR8528339 SRR8528340".split()
 
 #forward or reverse | paired or unpaired
 FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
 
+raw_reads_samples = expand("data/raw_reads/{sample}_count_reads.txt", sample = SAMPLES)
+count_trimmed_reads = expand("results/1_trimmed_reads/{sample}/{sample}_count_reads.txt", sample = SAMPLES)
+dedupl_var = expand("results/2_deduplicated_reads/{sample}/{sample}_{frpu}_dedupl.fq", sample = SAMPLES, frpu = FRPU)
+count_dedupl_reads = expand("results/2_deduplicated_reads/{sample}/{sample}_count_reads.txt", sample = SAMPLES)
+combine = expand("results/2_deduplicated_reads/{sample}/{sample}_reads.fq", sample = SAMPLES)
+alignreads = expand("./{sample}/", sample = SAMPLES)
+extract_contigs = expand("results/4_mapped_contigs/{sample}/sam", sample = SAMPLES)
+
+
+rule all:
+    input:
+        #raw_reads_samples,
+        #count_trimmed_reads,
+        #dedupl_var,
+        #count_dedupl_reads
+        #combine
+        #alignreads,
+        extract_contigs
+
 rule count_raw_reads:
     input:
-        forward="data/raw_reads/"+ SAMPLE_NAME + "_1.fastq",
-        reverse="data/raw_reads/"+ SAMPLE_NAME + "_2.fastq"
+        forward="data/raw_reads/{sample}_1.fastq",
+        reverse="data/raw_reads/{sample}_2.fastq"
     output:
-        "data/raw_reads/"+ SAMPLE_NAME + "_count_reads.txt"
+        "data/raw_reads/{sample}_count_reads.txt"
     shell:
         "echo $(cat {input.forward} | grep '@SRR' | wc -l) + $(cat {input.reverse} | grep '@SRR' | wc -l) | "
         "bc > {output}"
 
 rule trimming:
     input:
-        "data/raw_reads/"+ SAMPLE_NAME + "_1.fastq",
-        "data/raw_reads/"+ SAMPLE_NAME + "_2.fastq"
+        "data/raw_reads/{sample}_1.fastq",
+        "data/raw_reads/{sample}_2.fastq"
     output:
-        temp(expand("results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}.fq", FRPU = FRPU))
+        expand("results/1_trimmed_reads/{{sample}}/{{sample}}_{FRPU}.fq", FRPU = FRPU)
     shell:
         "trimmomatic PE -phred33 {input} {output} "
         "ILLUMINACLIP:trimmomatic_adapter/TruSeq3-PE-2.fa:2:30:10 "
@@ -29,35 +47,35 @@ rule trimming:
         "SLIDINGWINDOW:5:20 "
         "MINLEN:36"
 
-rule count_reads_trimming:
+rule count_trimmed_reads:
     input:
-        expand("results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}.fq", FRPU = FRPU)
+        expand("results/1_trimmed_reads/{{sample}}/{{sample}}_{FRPU}.fq", FRPU = FRPU)
     output:
-        "results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_count_reads.txt"
+        "results/1_trimmed_reads/{sample}/{sample}_count_reads.txt"
     shell:
         "echo $(cat {input} | wc -l)/4|bc >> {output}"
 
 rule deduplication:
     input:
-        "results/1_trimmed_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}.fq"
+        "results/1_trimmed_reads/{{sample}}/{{sample}}_{frpu}.fq"
     output:
-        temp("results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{frpu}_dedupl.fq")
+        "results/2_deduplicated_reads/{{sample}}/{{sample}}_{frpu}_dedupl.fq"
     shell:
         "fastx_collapser -v -i {input} -o {output}"
 
 rule combine:
     input:
-        expand("results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_{FRPU}_dedupl.fq", FRPU = FRPU)
+        expand("results/2_deduplicated_reads/{{sample}}/{{sample}}_{FRPU}_dedupl.fq", FRPU = FRPU)
     output:
-        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq"
+        "results/2_deduplicated_reads/{sample}/{sample}_reads.fq"
     shell:
-         "cat {input} > {output}"
+        "cat {input} > {output}"
 
-rule count_reads_deduplication:
+rule count_deduplicated_reads:
     input:
-        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq"
+        "results/2_deduplicated_reads/{sample}/{sample}_reads.fq"
     output:
-        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_count_reads.txt"
+        "results/2_deduplicated_reads/{sample}/{sample}_count_reads.txt"
     shell:
         "grep '>' {input} | wc -l > {output}"
 
@@ -65,8 +83,10 @@ rule count_reads_deduplication:
 # make sure to: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads"
 rule alignreads:
     input:
-        "results/2_deduplicated_reads/"+ SAMPLE_NAME + "/"+ SAMPLE_NAME + "_reads.fq",
+        "results/2_deduplicated_reads/{sample}/{sample}_reads.fq",
         "data/reference_genomes/ref-at.fasta"
+    output:
+        "{sample}/"
     shell:
         "alignreads {input} "
         "--single-step "
@@ -74,12 +94,17 @@ rule alignreads:
         "--read-orientation linear "
         "--percent-identity medium "
         "--depth-position-masking 5- "
-        "--proportion-base-filter 0.7-"
+        "--proportion-base-filter 0.7- "
+        "--output-directory {output}"
 
 # extract contigs from created SAM file after YASRA and create per contig new SAM files with headers
 rule extract_contigs:
     input:
         "src/extract_contigs_YASRA.py"
+    output:
+        "results/4_mapped_contigs/{sample}/sam"
+    params:
+        "{sample}"
     shell:
-        "python3 {input} " + SAMPLE_NAME
+        "python3 {input} {params}"
 
