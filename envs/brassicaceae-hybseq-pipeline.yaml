@@ -13,9 +13,11 @@ dependencies:
   - varscan =2.4.1
   - samtools
   - blat =35
-  #- mafft =6.851    #doet niet
+  #- mafft =6.851    #doet niet --oldgenafpair gebruiken
   - raxml =8.2.9
-  # macse
+  - macse =1.2
+  - ucsc-fatotwobit
+  - ucsc-twobittofa
   # astral II
   # trespex
   # treecmp
