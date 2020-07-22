@@ -1,0 +1,60 @@
+# variables for every species
+SAMPLE = "SRR8528375"
+
+#forward or reverse | paired or unpaired
+FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
+
+dedupl_var = expand("results/A02_deduplicated_reads/" + SAMPLE + "/" + SAMPLE + "_{frpu}_dedupl.fq", frpu = FRPU)
+count_dedupl_reads = expand("results/A02_deduplicated_reads/" + SAMPLE + "/" + SAMPLE + "_count_reads.txt")
+combine = expand("results/A02_deduplicated_reads/" + SAMPLE + "/" + SAMPLE + "_reads.fq")
+# alignreads = expand("./" + SAMPLE + "/")
+
+rule all:
+    input:
+        dedupl_var,
+        count_dedupl_reads,
+        combine
+        #alignreads,
+
+rule deduplication:
+    input:
+        "results/A01_trimmed_reads/" + SAMPLE + "/" + SAMPLE + "_{frpu}.fq"
+    output:
+        "results/A02_deduplicated_reads/" + SAMPLE + "/" + SAMPLE + "_{frpu}_dedupl.fq"
+    shell:
+        "fastx_collapser -v -i {input} -o {output}"
+
+rule combine:
+    input:
+        expand("results/A02_deduplicated_reads/" + SAMPLE + "/" + SAMPLE + "_{FRPU}_dedupl.fq", FRPU = FRPU)
+    output:
+        "results/A02_deduplicated_reads/" + SAMPLE + "/" + SAMPLE + "_reads.fq"
+    shell:
+        "cat {input} > {output}"
+
+rule count_deduplicated_reads:
+    input:
+        "results/A02_deduplicated_reads/" + SAMPLE + "/" + SAMPLE + "_reads.fq"
+    output:
+        "results/A02_deduplicated_reads/" + SAMPLE + "/" + SAMPLE + "_count_reads.txt"
+    shell:
+        "grep '>' {input} | wc -l > {output}"
+
+# reference mapping and de novo using YASRA/alignreads.py
+# make sure to: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads"
+rule alignreads:
+    input:
+        "results/A02_deduplicated_reads/" + SAMPLE + "/" + SAMPLE + "_reads.fq",
+        "data/reference_genomes/ref-at.fasta"
+    output:
+        SAMPLE + "/"
+    shell:
+        "alignreads {input} "
+        "--single-step "
+        "--read-type solexa "
+        "--read-orientation linear "
+        "--percent-identity medium "
+        "--depth-position-masking 5- "
+        "--proportion-base-filter 0.7- "
+        "--output-directory {output}"
+

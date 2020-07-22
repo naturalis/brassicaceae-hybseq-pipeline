@@ -1,0 +1,18 @@
+SAMPLES = "SRR8528343"
+
+extract_contigs = expand("results/A04_mapped_contigs/{sample}/sam", sample = SAMPLES)
+
+rule all:
+    input:
+        extract_contigs
+
+# extract contigs from created SAM file after YASRA and create per contig new SAM files with headers
+rule extract_contigs:
+    input:
+        "src/extract_contigs_YASRA.py"
+    output:
+        "results/A04_mapped_contigs/{sample}/sam"
+    params:
+        "{sample}"
+    shell:
+        "python3 {input} {params}"

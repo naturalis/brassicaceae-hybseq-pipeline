@@ -1,0 +1,64 @@
+# variables for every species
+# SAMPLES = "SRR8528339 SRR8528340".split()
+SAMPLE = "SRR8528341"
+
+configfile: "./envs/contigs/" + SAMPLE + ".yaml"
+
+bam = expand("results/A04_mapped_contigs/" + SAMPLE + "/bam/Contig{nr}_AT.bam", nr = config["contig_nrs"])
+var_variables = expand("results/A04_mapped_contigs/" + SAMPLE + "/var/Contig{nr}_AT_sort.var", nr = config["contig_nrs"])
+# make_contig_consensus = expand("results/A05_consensus_contigs/" + SAMPLES + "", sample = SAMPLES)
+
+rule all:
+    input:
+        bam,
+        var_variables
+        #make_contig_consensus
+
+rule convert_to_fBAM:
+    input:
+        "results/A04_mapped_contigs/" + SAMPLE + "/sam/Contig{nr}_AT.sam"
+    output:
+        "results/A04_mapped_contigs/" + SAMPLE + "/bam/Contig{nr}_AT.bam"
+    shell:
+        "samtools view -bS {input} > {output}"
+
+rule sort_fBAM:
+    input:
+        "results/A04_mapped_contigs/" + SAMPLE + "/bam/Contig{nr}_AT.bam"
+    output:
+        "results/A04_mapped_contigs/" + SAMPLE + "/sorted_bam/Contig{nr}_AT_sort.bam"
+    shell:
+        "samtools sort -m5G {input} -o {output}"
+
+rule convert_to_fpileup:
+    input:
+        "results/A04_mapped_contigs/" + SAMPLE + "/sorted_bam/Contig{nr}_AT_sort.bam"
+    output:
+        "results/A04_mapped_contigs/" + SAMPLE + "/pileup/Contig{nr}_AT_sort.pileup"
+    shell:
+        "samtools mpileup -B {input} > {output}"
+
+rule SNP_calling:
+    input:
+        "results/A04_mapped_contigs/" + SAMPLE + "/pileup/Contig{nr}_AT_sort.pileup"
+    output:
+        "results/A04_mapped_contigs/" + SAMPLE + "/var/Contig{nr}_AT_sort.var"
+    shell:
+        "varscan pileup2cns {input} "
+        "--min-freq-for-hom 0.6 "
+        "--min-coverage 5 "
+        "--min-var-freq 0.6 "
+        "--p-value 0.1 "
+        "--min-reads2 5 "
+        "> {output}"
+
+rule make_contig_consensus:
+    input:
+        "src/read_var.py"
+    output:
+        "results/A05_consensus_contigs/" + SAMPLE
+    params:
+        SAMPLE
+    shell:
+        "python3 {input} {params}"
+

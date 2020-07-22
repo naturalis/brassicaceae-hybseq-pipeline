@@ -1,0 +1,46 @@
+# variables for every species
+SAMPLES = "SRR8528376 SRR8528377".split()
+
+#forward or reverse | paired or unpaired
+FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
+
+raw_reads_samples = expand("data/raw_reads/{sample}_count_reads.txt", sample = SAMPLES)
+count_trimmed_reads = expand("results/A01_trimmed_reads/{sample}/{sample}_count_reads.txt", sample = SAMPLES)
+
+
+rule all:
+    input:
+        raw_reads_samples,
+        count_trimmed_reads
+
+rule count_raw_reads:
+    input:
+        forward="data/raw_reads/{sample}_1.fastq",
+        reverse="data/raw_reads/{sample}_2.fastq"
+    output:
+        "data/raw_reads/{sample}_count_reads.txt"
+    shell:
+        "echo $(cat {input.forward} | grep '@SRR' | wc -l) + $(cat {input.reverse} | grep '@SRR' | wc -l) | "
+        "bc > {output}"
+
+rule trimming:
+    input:
+        "data/raw_reads/{sample}_1.fastq",
+        "data/raw_reads/{sample}_2.fastq"
+    output:
+        expand("results/A01_trimmed_reads/{{sample}}/{{sample}}_{FRPU}.fq", FRPU = FRPU)
+    shell:
+        "trimmomatic PE -phred33 {input} {output} "
+        "ILLUMINACLIP:trimmomatic_adapter/TruSeq3-PE-2.fa:2:30:10 "
+        "LEADING:20 "
+        "TRAILING:20 "
+        "SLIDINGWINDOW:5:20 "
+        "MINLEN:36"
+
+rule count_trimmed_reads:
+    input:
+        expand("results/A01_trimmed_reads/{{sample}}/{{sample}}_{FRPU}.fq", FRPU = FRPU)
+    output:
+        "results/A01_trimmed_reads/{sample}/{sample}_count_reads.txt"
+    shell:
+        "echo $(cat {input} | wc -l)/4|bc >> {output}"

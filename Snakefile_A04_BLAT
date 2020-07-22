@@ -1,0 +1,33 @@
+# variables for every species
+# SAMPLES = ["SRR8528336", "SRR8528337", "SRR8528338", "SRR8528339", "SRR8528340", "SRR8528341"]
+SAMPLE_NAME = "SRR8528341"
+
+configfile: "./envs/contigs/" + SAMPLE_NAME + ".yaml"
+
+blat_variables = expand("results/A06_identified_contigs_blat/"+ SAMPLE_NAME + "/contig{nr}_AT.psl", nr = config["contig_nrs"])
+
+rule all:
+    input:
+        blat_variables
+
+rule BLAT_assembled:
+    input:
+        "data/exons/exons_AT.fasta",
+        "results/A05_consensus_contigs/"+ SAMPLE_NAME + "/Contig{nr}.fasta"
+    output:
+        "results/A06_identified_contigs_blat/"+ SAMPLE_NAME + "/contig{nr}_AT.psl"
+    shell:
+        "blat "
+        "-t=dnax "
+        "-q=dnax "
+        "-stepSize=5 "
+        "-repMatch=2253 "
+        "-minScore=0 "
+        "-minIdentity=0 "
+        "{input} {output}"
+
+rule extract_hits_psl:
+    input:
+        "src/extract_hits_psl.py"
+    shell:
+        "python {input} " + SAMPLE_NAME
