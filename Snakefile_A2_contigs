@@ -1,0 +1,110 @@
+# variables for every species
+SAMPLES = "SRR8528347 SRR8528355 SRR8528356".split()
+
+configfile: "./envs/config_contigs.yaml"
+
+# bam = []
+# sort_bam = []
+# fpileup = []
+var_variables = []
+make_contig_consensus = []
+blat_variables = []
+extract_hits_psl = []
+for sample in SAMPLES:
+    contig_nrs = config[sample]
+    for nr in contig_nrs:
+        # bam.append(f"results/A04_mapped_contigs/{sample}/bam/Contig{nr}_AT.bam")
+        # sort_bam.append(f"results/A04_mapped_contigs/{sample}/sorted_bam/Contig{nr}_AT_sort.bam")
+        # fpileup.append(f"results/A04_mapped_contigs/{sample}/pileup/Contig{nr}_AT_sort.pileup")
+        var_variables.append(f"results/A04_mapped_contigs/{sample}/var/Contig{nr}_AT_sort.var")
+        make_contig_consensus.append(f"results/A05_consensus_contigs/{sample}/Contig{nr}.fasta")
+        blat_variables.append(f"results/A06_identified_contigs_blat/{sample}/contig{nr}_AT.psl")
+        extract_hits_psl.append(f"results/A07_mapped_exons/{sample}/")
+
+rule all:
+    input:
+        # bam,
+        # sort_bam,
+        # fpileup,
+        var_variables,
+        make_contig_consensus,
+        blat_variables,
+        extract_hits_psl
+
+rule convert_to_fBAM:
+    input:
+        "results/A04_mapped_contigs/{sample}/sam/Contig{nr}_AT.sam"
+    output:
+        "results/A04_mapped_contigs/{sample}/bam/Contig{nr}_AT.bam"
+    shell:
+        "samtools view -bS {input} > {output}"
+
+rule sort_fBAM:
+    input:
+        "results/A04_mapped_contigs/{sample}/bam/Contig{nr}_AT.bam"
+    output:
+        "results/A04_mapped_contigs/{sample}/sorted_bam/Contig{nr}_AT_sort.bam"
+    shell:
+        "samtools sort -m5G {input} -o {output}"
+
+rule convert_to_fpileup:
+    input:
+        "results/A04_mapped_contigs/{sample}/sorted_bam/Contig{nr}_AT_sort.bam"
+    output:
+        "results/A04_mapped_contigs/{sample}/pileup/Contig{nr}_AT_sort.pileup"
+    shell:
+        "samtools mpileup -B {input} > {output}"
+
+rule SNP_calling:
+    input:
+        "results/A04_mapped_contigs/{sample}/pileup/Contig{nr}_AT_sort.pileup"
+    output:
+        "results/A04_mapped_contigs/{sample}/var/Contig{nr}_AT_sort.var"
+    shell:
+        "varscan pileup2cns {input} "
+        "--min-freq-for-hom 0.6 "
+        "--min-coverage 5 "
+        "--min-var-freq 0.6 "
+        "--p-value 0.1 "
+        "--min-reads2 5 "
+        "> {output}"
+
+rule make_contig_consensus:
+    input:
+        script = "src/read_var.py",
+        file = "results/A04_mapped_contigs/{sample}/var/Contig{nr}_AT_sort.var"
+    output:
+        "results/A05_consensus_contigs/{sample}/Contig{nr}.fasta"
+    params:
+        "{sample}"
+    shell:
+        "python3 {input.script} {params}"
+
+rule BLAT_assembled:
+    input:
+        "data/exons/exons_AT.fasta",
+        "results/A05_consensus_contigs/{sample}/Contig{nr}.fasta"
+    output:
+        "results/A06_identified_contigs_blat/{sample}/contig{nr}_AT.psl"
+    shell:
+        "blat "
+        "-t=dnax "
+        "-q=dnax "
+        "-stepSize=5 "
+        "-repMatch=2253 "
+        "-minScore=0 "
+        "-minIdentity=0 "
+        "{input} {output}"
+
+rule extract_hits_psl:
+    input:
+        script = "src/extract_hits_psl.py"
+        # file = "results/A06_identified_contigs_blat/{sample}/contig{nr}_AT.psl"
+    output:
+        "results/A07_mapped_exons/{sample}/"
+    params:
+        "{sample}"
+    shell:
+        "python {input.script} {params}"
+
+

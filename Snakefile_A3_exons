@@ -1,0 +1,48 @@
+configfile: "./envs/config_exons.yaml"
+SAMPLES = "SRR8528347 SRR8528355 SRR8528356".split()
+
+# variables for rule all:
+mafft_variables = []
+make_exon_consensus = []
+for sample in SAMPLES:
+    exons = config[sample]
+    for exon in exons:
+        mafft_variables.append(f"results/A08_aligned_exons/{sample}/{exon}.fasta")
+        make_exon_consensus.append(f"results/A09_consensus_exons/{sample}/{exon}.fasta")
+
+
+rule all:
+    input:
+        mafft_variables,
+        make_exon_consensus
+
+rule MAFFT_assembly:
+    input:
+        "results/A07_mapped_exons/{sample}/{exon}.fasta"
+    output:
+        "results/A08_aligned_exons/{sample}/{exon}.fasta"
+    shell:
+        "mafft "
+        "--maxiterate 1000 "
+        "--oldgenafpair "
+        "{input} > {output}"
+
+rule make_exon_consensus:
+    input:
+        script = "src/make_exon_consensus.py",
+        file = "results/A08_aligned_exons/"
+    output:
+        "results/A09_consensus_exons/{sample}/{exon}.fasta"
+    params:
+         "{sample}"
+    shell:
+        "python {input.script} {params}"
+
+rule merge_exon_seqs:
+    input:
+        script = "src/merge_exon_seqs.py",
+        file = "results/A09_consensus_exons/"
+    output:
+        "results/A10_all_samples_exons/"
+    shell:
+         "python {input.script}"

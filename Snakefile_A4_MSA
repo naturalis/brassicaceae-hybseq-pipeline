@@ -1,0 +1,65 @@
+configfile: "./envs/all_exons.yaml"
+
+#variables for rule all
+mafft_var = []
+trim_var = []
+macse_aa_var = []
+macse_nt_var = []
+trim_prot_aa_var = []
+trim_prot_nt_var = []
+exons = config["exons"]
+for exon in exons:
+    mafft_var.append(f"results/A11_aligned_exons_ORF/{exon}.fasta")
+    trim_var.append(f"results/A12_trimmed_alignments/{exon}.fasta")
+    macse_aa_var.append(f"results/A13_prot_alignments/{exon}_AA.fasta")
+    macse_nt_var.append(f"results/A13_prot_alignments/{exon}_NT.fasta")
+    trim_prot_aa_var.append(f"results/A14_trimmed_prot/{exon}_AA.fasta")
+    trim_prot_nt_var.append(f"results/A14_trimmed_prot/{exon}_NT.fasta")
+
+
+rule all:
+    input:
+        mafft_var,
+        trim_var,
+        macse_aa_var,
+        macse_nt_var,
+        trim_prot_aa_var,
+        trim_prot_nt_var
+
+
+rule MAFFT_assembly:
+    input:
+        "results/A10_all_samples_exons/{exon}.fasta"
+    output:
+        "results/A11_aligned_exons_ORF/{exon}.fasta"
+    shell:
+        "mafft "
+        "--maxiterate 1000 "
+        "--oldgenafpair "
+        "{input} > {output}"
+
+rule trim_alignments:
+    input:
+         "src/trim_alignments.py"
+    output:
+          "results/A12_trimmed_alignments/{exon}.fasta"
+    shell:
+         "python {input}"
+
+rule macse:
+    input:
+         fasta = "results/A12_trimmed_alignments/{exon}.fasta"
+    output:
+         NT = "results/A13_prot_alignments/{exon}_NT.fasta",
+         AA = "results/A13_prot_alignments/{exon}_AA.fasta"
+    shell:
+         "macse -prog alignSequences -seq {input.fasta} -out_NT {output.NT} -out_AA {output.AA}"
+
+rule trim_prot_alignments:
+    input:
+        "src/trim_prot_alignments.py"
+    output:
+        NT = "results/A14_trimmed_prot/{exon}_NT.fasta",
+        AA = "results/A14_trimmed_prot/{exon}_aa.fasta"
+    shell:
+        "python {input}"
