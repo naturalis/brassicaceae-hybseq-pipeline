@@ -8,9 +8,11 @@
 
 import sys
 import os
+import re
+import fnmatch
 
 SAMPLE_NAME = sys.argv[1]
-
+N_TABS = 10
 
 # Create directory of given path if it doesn't exist
 def create_dir(path):
@@ -54,16 +56,35 @@ def count_save_stats(path_to_sam, nreads, ncontigs):
     f.close()
 
 
-def create_YAML(path):
-    f = open(path, "w+")
-    f.write("contig_nrs:\n")
-    f.close()
-    print(path + " is created")
+def natural_sort(l):
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    return sorted(l, key=alphanum_key)
+
+
+def sample_exist(path):
+    fYAML = open(path, "rt")
+    for line in fYAML:
+        if SAMPLE in line:
+            return True
+
+
+def append_YAML(path, sorted_list_contigs):
+    fYAML = open(path, "a+")
+    fYAML.write(SAMPLE + ":\n")
+    pattern = "*.sam"
+    for file in sorted_list_contigs:
+        if fnmatch.fnmatch(file, pattern):
+            contig_fsam = file
+            contig_name, ref = contig_fsam.split("_")
+            contig, contig_nr = contig_name.split("Contig")
+            fYAML.write("    - " + str(contig_nr) + "\n")
+    fYAML.close()
 
 
 '''Code starts here'''
 # Change YASRA output dir name
-path_to_mapped_reads_dir = './results/3_mapped_reads/'
+path_to_mapped_reads_dir = './results/A03_mapped_reads/'
 path_to_mapped_reads_sample_dir = path_to_mapped_reads_dir + SAMPLE_NAME + "/"
 create_dir(path_to_mapped_reads_dir)
 create_dir(path_to_mapped_reads_sample_dir)
@@ -78,7 +99,7 @@ for dir in list_current_dir:
 # Creating paths for output directory
 path_to_YASRA_dir = path_to_mapped_reads_sample_dir + "YASRA_related_files/"
 path_to_YASRA_fSAM = path_to_YASRA_dir + 'alignments_' + SAMPLE_NAME + '_reads.fq_ref-at.fasta.sam'
-path_to_mapped_contigs = './results/4_mapped_contigs/'
+path_to_mapped_contigs = './results/A04_mapped_contigs/'
 path_to_species = path_to_mapped_contigs + SAMPLE_NAME + '/'
 path_to_sam = path_to_species + 'sam/'
 
@@ -99,36 +120,76 @@ contig_name_temporary = " "
 with open(path_to_YASRA_fSAM, 'rt') as myfile:
     for myline in myfile:
         if myline.startswith('>'):
-            nreads += 1
-            qname, flag, contig, pos, mapq, cigar, rnext, pnext, tlen, read, phred = myline.split("\t")
+            # checkt of er nog een '>' in line zit
+            ntabs = 0
+            for char in myline:
+                if char == "\t":
+                    ntabs += 1
+            if ntabs == N_TABS:
+                nreads += 1
+                qname, flag, contig, pos, mapq, cigar, rnext, pnext, tlen, read, phred = myline.split("\t")
 
-            contig_number, reference_genome, contig_start, contig_end = contig.split("_")
-            contig_length = int(contig_end) - int(contig_start) + 1
+                contig_number, reference_genome, contig_start, contig_end = contig.split("_")
+                contig_length = int(contig_end) - int(contig_start) + 1
 
-            if contig != contig_name_temporary:
-                create_new_fSAM(path_to_sam, contig_number, reference_genome, contig, contig_length, myline)
+                if contig != contig_name_temporary:
+                    create_new_fSAM(path_to_sam, contig_number, reference_genome, contig, contig_length, myline)
 
-                ncontigs +=1
-                contig_name_temporary = contig
+                    ncontigs +=1
+                    contig_name_temporary = contig
 
-            elif contig == contig_name_temporary:
-                write_to_fSAM(path_to_sam, contig_number, reference_genome, myline)
+                elif contig == contig_name_temporary:
+                    write_to_fSAM(path_to_sam, contig_number, reference_genome, myline)
 
     count_save_stats(path_to_sam, nreads, ncontigs)
 
-# creates configuration YAML file in envs contigs dir
-path_to_contigs_configs = "./envs/contigs/"
-create_dir(path_to_contigs_configs)
-path_to_fYAML = path_to_contigs_configs + SAMPLE_NAME + ".yaml"
+# # creates configuration YAML file in envs for single sample
+# path_to_contigs_configs = "./envs/contigs/"
+# create_dir(path_to_contigs_configs)
+# path_to_fYAML = path_to_contigs_configs + SAMPLE_NAME + ".yaml"
+# create_YAML(path_to_fYAML)
+#
+# for ncontig in range(1, ncontigs + 1):
+#     path_to_fvar = path_to_species + "var/Contig" + str(ncontig) + "_AT_sort.var"
+#     fYAML = open(path_to_fYAML, "a+")
+#     fYAML.write("    " + str(ncontig) + ": " + path_to_fvar + "\n")
+#     fYAML.close()
+
+'''
+# creates config file for only contigs
+path_to_fYAML = "envs/config_contigs.yaml"
 create_YAML(path_to_fYAML)
 
-for ncontig in range(1, ncontigs + 1):
-    path_to_fvar = path_to_species + "var/Contig" + str(ncontig) + "_AT_sort.var"
+list_samples = os.listdir(path_to_mapped_contigs)
+sorted_list_samples = natural_sort(list_samples)
+for sample in sorted_list_samples:
     fYAML = open(path_to_fYAML, "a+")
-    fYAML.write("    " + str(ncontig) + ": " + path_to_fvar + "\n")
+    fYAML.write(sample + ":\n")
     fYAML.close()
 
+    path_to_sam_dir = path_to_mapped_contigs + sample + "/sam"
+    list_contigs = os.listdir(path_to_sam_dir)
+    sorted_list_contigs = natural_sort(list_contigs)
+    pattern = "*.sam"
+    for file in sorted_list_contigs:
+        if fnmatch.fnmatch(file, pattern):
+            contig_fsam = file
+            contig_name, ref = contig_fsam.split("_")
+            contig, contig_nr = contig_name.split("Contig")
 
+            path_to_fvar = path_to_mapped_contigs + sample + "/var/Contig" + str(contig_nr) + "_AT_sort.var"
+            fYAML = open(path_to_fYAML, "a+")
+            fYAML.write("    - " + str(contig_nr) + "\n")
+            fYAML.close()
+'''
 
+# Creates YAML environment for all contigs per sample
+path_to_sam_dir = './results/A04_mapped_contigs/' + SAMPLE + "/sam"
+list_contigs = os.listdir(path_to_sam_dir)
+sorted_list_contigs = natural_sort(list_contigs)
+
+path_to_contig_env = "envs/config_contigs.yaml"
+if not sample_exist(path_to_contig_env):
+    append_YAML(path_to_contig_env, sorted_list_contigs)
 
 

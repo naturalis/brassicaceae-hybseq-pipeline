@@ -1,4 +1,4 @@
-# trim_alignments.py
+# trim_prot_alignments.py
 # This script is to trim the protein aligned exons for all samples based on the ref exon in ORF.
 # The input will be the EXON_NAME_AA.fasta and the output will be a EXON_NAME_AA_trimmed.fasta file with their
 # trimmed protein alignments
@@ -38,24 +38,193 @@ def create_ffasta(path):
     ffasta.close()
 
 
-def write_ffasta(path, record, protein_seq):
-    ffasta = open(path, "a+")
-    ffasta.write(">" + record.id + "\n")
-    ffasta.write(protein_seq + "\n")
-    ffasta.close()
+def replace_to_n(record):
+    nt_dict[exon_name][record.id] = {}
+    position = 0
+    new_seq = ""
+    for base in record.seq:
+        position += 1
+        nt_dict[exon_name][record.id][position] = base
+        # change '!' fragment shifts and '-' gaps to 'N' in new sequence
+        if base == "-" or base == "!":
+            new_seq += "N"
+        else:
+            new_seq += base
+    return new_seq
+
+
+def count_bases(new_seq):
+    nbase_ACGT = 0
+    for base in new_seq:
+        if base != "N":
+            nbase_ACGT += 1
+    return nbase_ACGT
+
+
+# create empty dictionary to count x's per position
+def create_empty_nested_dict(new_dict, old_dict):
+    for exon in old_dict:
+        for sample in old_dict[exon]:
+            new_dict[exon] = {}
+            for position in old_dict[exon][sample]:
+                new_dict[exon][position] = 0
+    return new_dict
+
+
+# fill in the dictionary the number of x's per position
+def count_X_dict(new_dict, old_dict):
+    for exon in old_dict:
+        for sample in old_dict[exon]:
+            for position in old_dict[exon][sample]:
+                if old_dict[exon][sample][position] == "X":
+                    new_dict[exon][position] += 1
+    return new_dict
+
+
+def create_empty_trimmed_dict(aa_dict):
+    trimmed_dict = {}
+    for exon in aa_dict:
+        trimmed_dict[exon] = {}
+        for sample in aa_dict[exon]:
+            trimmed_dict[exon][sample] = {}
+    return trimmed_dict
+
+
+def calculate_nx_thresh(aa_dict, exon):
+    nseq = 0
+    for sample in aa_dict[exon]:
+        nseq += 1
+    nx_thresh = NX_PERC_TRESH * nseq
+    return nx_thresh
+
+
+# initialize the nucleotides positions (regions) for each codon
+# 1 aa position consists of 3 nt positions (1 AA - 1 NT, 2 NT, 3 NT)(2e AA - 4 NT, 5 NT, 6 NT) etc.
+def initialize_nt_positions(aa_position):
+    region = []
+    nt1 = ((aa_position-1) * 3)+1   #-1 to intialize the first nucleotides
+    nt2 = nt1 + 1
+    nt3 = nt2 + 1
+    region.append(nt1)
+    region.append(nt2)
+    region.append(nt3)
+    return region
+
+
+# counts for each exon per position if internal stop codons are present
+def count_stop_dict(new_dict, trimmed_aa_x_dict, aa_dict):
+    for exon in trimmed_aa_x_dict:
+        for sample in trimmed_aa_x_dict[exon]:
+            for position in trimmed_aa_x_dict[exon][sample]:
+                last_position = len(aa_dict[exon][sample])
+                if position != last_position and trimmed_aa_x_dict[exon][sample][position] == "*":
+                    new_dict[exon][position] += 1
+    return new_dict
+
+
+def append_trimmed_dict(stop_dict, aa_dict, trimmed_aa_x_dict, trimmed_aa_x_stop_dict,
+                    trimmed_nt_x_dict, trimmed_nt_x_stop_dict):
+    for exon in stop_dict:
+        for sample in aa_dict[exon]:
+            for aa_position in stop_dict[exon]:
+                if stop_dict[exon][aa_position] == 0:
+                    # appends aa to the trimmed aa dictionary if there are no internal stop codons
+                    trimmed_aa_x_stop_dict[exon][sample][aa_position] = trimmed_aa_x_dict[exon][sample][aa_position]
+                    region = initialize_nt_positions(aa_position)
+                    # print(str(aa_position) + " belongs to " + str(region))
+                    for nt_position in region:
+                        trimmed_nt_x_stop_dict[exon][sample][nt_position] = trimmed_nt_x_dict[exon][sample][nt_position]
+
+
+def count_nstops(stop_dict):
+    total_nstops = 0
+    for exon in stop_dict:
+        for position in stop_dict[exon]:
+            if stop_dict[exon][position] > 0:
+                total_nstops += 1
+    return total_nstops
+
+
+def create_empty_diversity_dict(count_aa_diversity, aa_dict, trimmed_aa_x_stop_dict):
+    for exon in aa_dict:
+        count_aa_diversity[exon] = {}
+        for sample in trimmed_aa_x_stop_dict[exon]:
+            for aa_position in trimmed_aa_x_stop_dict[exon][sample]:
+                count_aa_diversity[exon][aa_position] = {}
+    return count_aa_diversity
+
+
+def count_diversity_dict(count_aa_diversity, trimmed_aa_x_stop_dict):
+    for exon in count_aa_diversity:
+        for sample in trimmed_aa_x_stop_dict[exon]:
+            for aa_position in trimmed_aa_x_stop_dict[exon][sample]:
+                aa = trimmed_aa_x_stop_dict[exon][sample][aa_position]
+                appended_aa = count_aa_diversity[exon][aa_position].keys()
+                if aa in appended_aa:
+                    count_aa_diversity[exon][aa_position][aa] += 1
+                else:
+                    count_aa_diversity[exon][aa_position][aa] = 1
+    return count_aa_diversity
+
+
+def calculate_div_thresh(aa_dict, exon) :
+    nseq = 0
+    for sample in aa_dict[exon]:
+        nseq += 1
+    diverse_thresh = nseq * DIVERSE_PERC_THRESH
+    return diverse_thresh
+
+
+def create_empty_final_dict(count_aa_diversity, aa_dict):
+    trimmed_dict = {}
+    for exon in count_aa_diversity:
+        trimmed_dict[exon] = {}
+        for sample in aa_dict[exon]:
+                trimmed_dict[exon][sample] = ""
+    return trimmed_dict
+
+
+def append_final_trimmed_dict(count_aa_diversity, aa_dict, trimmed_aa_x_stop_diverse_dict, trimmed_aa_x_stop_dict,
+                              trimmed_nt_x_stop_diverse_dict, trimmed_nt_x_stop_dict):
+    for exon in count_aa_diversity:
+        diverse_thresh = calculate_div_thresh(aa_dict, exon)
+        for sample in aa_dict[exon]:
+            for aa_position in count_aa_diversity[exon]:
+                n_most_prevelant = 0
+                for aa in count_aa_diversity[exon][aa_position]:
+                    if count_aa_diversity[exon][aa_position][aa] > n_most_prevelant:
+                        n_most_prevelant = count_aa_diversity[exon][aa_position][aa]
+                if n_most_prevelant > diverse_thresh:
+                    trimmed_aa_x_stop_diverse_dict[exon][sample] += trimmed_aa_x_stop_dict[exon][sample][aa_position]
+                    region = initialize_nt_positions(aa_position)
+                    for nt_position in region:
+                        trimmed_nt_x_stop_diverse_dict[exon][sample] += trimmed_nt_x_stop_dict[exon][sample][
+                            nt_position]
+
+
+def write_ffasta(final_trimmed_dict, path_to_trimmed_prot_dir, extension):
+    for exon in final_trimmed_dict:
+        path_to_nt_ffasta = path_to_trimmed_prot_dir + exon + extension
+        nt_ffasta = open(path_to_nt_ffasta, "w+")
+        for sample in final_trimmed_dict[exon]:
+            nt_ffasta.write(">" + sample + "\n")
+            nt_seq = final_trimmed_dict[exon][sample]
+            nt_ffasta.write(nt_seq + "\n")
+        nt_ffasta.close()
 
 
 # Code starts here
-path_to_macse_dir = "./results/13_prot_alignments/"
+path_to_macse_dir = "./results/A13_prot_alignments/"
 list_macse_dir = os.listdir(path_to_macse_dir)
 sorted_list_macse_dir = natural_sort(list_macse_dir)
 
-path_to_trimmed_prot_dir = "./results/14_trimmed_prot/"
+path_to_trimmed_prot_dir = "./results/A14_trimmed_prot/"
 create_dir(path_to_trimmed_prot_dir)
 
 pattern = "*_NT.fasta"
+
 max_exons = 0
-exon_dict = {}
+aa_dict = {}
 nt_dict = {}
 for file in sorted_list_macse_dir:
     if fnmatch.fnmatch(file, pattern):
@@ -65,284 +234,92 @@ for file in sorted_list_macse_dir:
         max_exons += 1
 
         path_to_fNT = path_to_macse_dir + fNT_alignments
-        path_to_ftrimmed_prot = path_to_trimmed_prot_dir + fNT_alignments
-        create_ffasta(path_to_ftrimmed_prot)
-
-        exon_dict[exon_name] = {}
+        aa_dict[exon_name] = {}
         nt_dict[exon_name] = {}
         for record in SeqIO.parse(path_to_fNT, "fasta"):
             # create new sequence to translate gaps and frameshifts to 'N'
-            nt_dict[exon_name][record.id] = {}
-            position = 0
-            new_seq = ""
-            for base in record.seq:
-                position += 1
-                nt_dict[exon_name][record.id][position] = base
-                # change '!' fragment shifts and '-' gaps to 'N' in new sequence
-                if base == "-" or base == "!":
-                    new_seq += "N"
-                else:
-                    new_seq += base
-
+            new_seq = replace_to_n(record)
             '''Step 1: Deletes the sample if sequence base length too short (if too many gaps or fragment shifts)
             Final sequences shorter than 35% of unambiguous nucleotide positions based on the reference exon length 
-            were removed.'''            ## DIT MOET EIGENLIJK LAATSTE STAP ZIJN, WANT HIJ MOET FINAL SEQUENCE CHECK DOEN?
-            # calculate minimum nucleotide length per sequence and delete if below threshold
-            nbase = len(record.seq)         ### = REFERENCE EXON LENGTH?? (Is geloof ik gewoon de ORF lengte, dus lengte die elke NT seq heeft in het begin na macse)
+            were removed.'''
+            nbase = len(record.seq)
             min_nbases = nbase * ACGT_LENGTH_PERC_THRESH
-            nbase_ACGT = 0
-            for base in new_seq:
-                if base != "N":
-                    nbase_ACGT += 1
+            nbase_ACGT = count_bases(new_seq)
+            if nbase_ACGT > min_nbases:
+                # translate dna sequence to protein sequence
+                nt_seq = Seq(new_seq, generic_dna)
+                protein_seq = nt_seq.translate()
 
-            if nbase_ACGT <= min_nbases:
-                print(record.id + " has too few nucleotide bases: " + str(nbase) +
-                      ". It's below min_bases: " + str(min_nbases))
-                ### MOET NOG GEDAAN WORDEN: verwijder record.id en seq van lijst
-
-            # translate dna sequence to protein sequence
-            my_seq = Seq(new_seq, generic_dna)
-            protein_seq = my_seq.translate()
-            exon_dict[exon_name][record.id] = {}
-
-            position = 0
-            for aa in protein_seq:
-                position += 1
-                exon_dict[exon_name][record.id][position] = aa
-
-                # if aa == "*":
-                #     print(fNT_alignments)
-                #     print(record.id)
-                #     print(protein_seq)
-
-            protein_seq_length = len(protein_seq)
-
-# test
-print("originele NT seq:")
-print(nt_dict['AT5G05680.1@6'])
-print("\n")
-print("changed fragments shifts and gaps to 'N' and translated in AA seq:")
-print(exon_dict['AT5G05680.1@6'])
-print("\n")
-
+                # assign amino acid per position in aa_dict
+                position = 0
+                aa_dict[exon_name][record.id] = {}
+                for aa in protein_seq:
+                    position += 1
+                    aa_dict[exon_name][record.id][position] = aa
+                protein_seq_length = len(protein_seq)
+            else:
+                print(record.id + " has too few nucleotide bases: " + str(nbase_ACGT) +
+                      ". It's below min_bases: " + str(min_nbases)) + ". This sample has been deleted."
 
 # evaluate protein alignment
 '''Step 2: Calculates per exon for every position the number of X's. Positions with > 20% ambiguous amino acids 
 (threshold) resulting from unidentified nucleotides (Ns) and gaps (-) were removed'''
-# create empty dictionary to count x's per position
 x_dict = {}
-for exon in exon_dict:
-    for sample in exon_dict[exon]:
-        x_dict[exon] = {}
-        for position in exon_dict[exon][sample]:
-            x_dict[exon][position] = 0
-
-# fill in the dictionary the number of x's per position
-for exon in exon_dict:
-    for sample in exon_dict[exon]:
-        for position in exon_dict[exon][sample]:
-            if exon_dict[exon][sample][position] == "X":
-                x_dict[exon][position] += 1
-
-#test
-print("dictionary counting the X's of each position of all samples:")
-print(x_dict['AT5G05680.1@6'])
-print("\n")
-
+x_dict = create_empty_nested_dict(x_dict, aa_dict)
+x_dict = count_X_dict(x_dict, aa_dict)
 
 # create trimmed dictionary for AA and NT
-trimmed_aa_x_dict = {}     # AA
-trimmed_nt_x_dict = {}  # NT
-n_xs = 0
+trimmed_aa_x_dict = create_empty_trimmed_dict(aa_dict)
+trimmed_nt_x_dict = create_empty_trimmed_dict(aa_dict)
+
+total_nx = 0
 for exon in x_dict:
-    trimmed_aa_x_dict[exon] = {}
-    trimmed_nt_x_dict[exon] = {}
-
-    # calculate nx threshold
-    nseq = 0
-    for sample in exon_dict[exon]:
-        nseq += 1
-    nx_thresh = NX_PERC_TRESH * nseq
-
-    # add trimmed alignments to new dictionary (aa_x_dict for amino acids and nt_x_dict for nucleotides)
-    for sample in exon_dict[exon]:
-        trimmed_aa_x_dict[exon][sample] = {}
-        trimmed_nt_x_dict[exon][sample] = {}
+    nx_thresh = calculate_nx_thresh(aa_dict, exon)
+    for sample in aa_dict[exon]:
         for aa_position in x_dict[exon]:
             nx = x_dict[exon][aa_position]
-            # checks per position if number of X's are below threshold, if yes: add base to the trimmed dictionary for
+            # checks if number of X's per position are below threshold, if yes: add base to the trimmed dictionary for
             # protein sequences and nucleotide sequences
             if nx <= nx_thresh:
-                # write trimmed aa sequence
-                trimmed_aa_x_dict[exon][sample][aa_position] = exon_dict[exon][sample][aa_position]
+                trimmed_aa_x_dict[exon][sample][aa_position] = aa_dict[exon][sample][aa_position]
 
-                # initialize the nucleotides positions (regions) for each codon
-                region = []
-                # 1 aa position consists of 3 nt positions (1 AA - 1 NT, 2 NT, 3 NT)(2e AA - 4 NT, 5 NT, 6 NT) etc.
-                nt1 = ((aa_position-1) * 3)+1   #-1 to intialize the first nucleotides
-                nt2 = nt1 + 1
-                nt3 = nt2 + 1
-                region.append(nt1)
-                region.append(nt2)
-                region.append(nt3)
+                region = initialize_nt_positions(aa_position)
                 # print(str(aa_position) + " belongs to " + str(region))
-
-                # write trimmed nt sequence
                 for nt_position in region:
-                    # print(nt_position)
                     trimmed_nt_x_dict[exon][sample][nt_position] = nt_dict[exon][sample][nt_position]
             else:
-                n_xs += 1
+                total_nx += 1
                 # print("number of X's: " + str(nx) + " on position: " + str(aa_position) + " exceeds the threshold: " +
                 #       str(nx_thresh) + " in exon: " + exon)
-
-# test
-print("trimmed dictionary of aa on the positions where amount of x was higher than threshold:")
-print(trimmed_aa_x_dict['AT5G05680.1@6'])
-print("\n")
-
-print("trimmed dictionary of nucleotide regions of the aa's where X was higher than threshold:")
-print(trimmed_nt_x_dict['AT5G05680.1@6'])
-print("\n")
-
-# test x's
-print("number of x's above threshold: " + str(n_xs))
-# print(trimmed_aa_x_dict['AT5G05680.1@6']) # positie 944 verwijderd
-
-
+#
 '''Step 3: Checks if internal stop codon (*) indicative of misalignment is present'''
 # creates empty dictionary for stop codons
 stop_dict = {}
-for exon in trimmed_aa_x_dict:
-    for sample in trimmed_aa_x_dict[exon]:
-        stop_dict[exon] = {}
-        for position in trimmed_aa_x_dict[exon][sample]:
-            stop_dict[exon][position] = 0
-
-# counts for each exon per position if internal stop codons are present
-for exon in trimmed_aa_x_dict:
-    for sample in trimmed_aa_x_dict[exon]:
-        for position in trimmed_aa_x_dict[exon][sample]:
-            last_position = len(exon_dict[exon][sample])
-            if position != last_position and trimmed_aa_x_dict[exon][sample][position] == "*":
-                stop_dict[exon][position] += 1
-
-# test
-print("dictionary with counted stop codons for all samples:")
-print(stop_dict['AT5G05680.1@6'])
-print("\n")
-
+stop_dict = create_empty_nested_dict(stop_dict, trimmed_aa_x_dict)
+stop_dict = count_stop_dict(stop_dict, trimmed_aa_x_dict, aa_dict)
 
 # create trimmed AA and NT dictionary for each exon per position without gaps, shifts and internal stop codons
-trimmed_aa_x_stop_dict = {}
-trimmed_nt_x_stop_dict = {}
-for exon in stop_dict:
-    trimmed_aa_x_stop_dict[exon] = {}
-    trimmed_nt_x_stop_dict[exon] = {}
-    for sample in exon_dict[exon]:
-        trimmed_aa_x_stop_dict[exon][sample] = {}
-        trimmed_nt_x_stop_dict[exon][sample] = {}
-        for aa_position in stop_dict[exon]:
-            if stop_dict[exon][aa_position] == 0:
-                # appends aa to the trimmed aa dictionary if there are no internal stop codons
-                trimmed_aa_x_stop_dict[exon][sample][aa_position] = trimmed_aa_x_dict[exon][sample][aa_position]
-
-                # initialize the nucleotides positions (regions) for each codon (ZELFDE ALS BOVEN FUNCTION)
-                region = []
-                nt1 = ((aa_position-1) * 3)+1
-                nt2 = nt1 + 1
-                nt3 = nt2 + 1
-                region.append(nt1)
-                region.append(nt2)
-                region.append(nt3)
-                # print(str(aa_position) + " belongs to " + str(region))
-                for nt_position in region:
-                    trimmed_nt_x_stop_dict[exon][sample][nt_position] = trimmed_nt_x_dict[exon][sample][nt_position]
-
-# test
-print("trimmed dictionary of aa on the positions where amount of x was higher than threshold AND stop codons unless"
-      "positioned on the last position:")
-print(trimmed_aa_x_stop_dict['AT5G05680.1@6'])
-print("\n")
-
-print("trimmed dictionary of nucleotide regions of the aa's where X was higher than threshold AND stop codons unless"
-      "positioned on the last position:")
-print(trimmed_nt_x_stop_dict['AT5G05680.1@6'])
-print("\n")
-
+trimmed_aa_x_stop_dict = create_empty_trimmed_dict(aa_dict)
+trimmed_nt_x_stop_dict = create_empty_trimmed_dict(aa_dict)
+append_trimmed_dict(stop_dict, aa_dict, trimmed_aa_x_dict, trimmed_aa_x_stop_dict,
+                    trimmed_nt_x_dict, trimmed_nt_x_stop_dict)
 
 # Counts number of present internal stop codons (*) indicative of misalignment
-nstops = 0
-for exon in stop_dict:
-    for position in stop_dict[exon]:
-        if stop_dict[exon][position] > 0:
-            nstops += 1
-            # print("exon: " + exon + " on position: " + str(position) + " has a stopcodon")
-            # print(stop_dict[exon])
-print("nr of stop codons: " + str(nstops))
-
+total_nstops = count_nstops(stop_dict)
 
 '''Step 4: Deletes if a codon position was too diverse (most prevalent amino acid identical for < 30% of the taxa)'''
-# nieuwe lege dict voor trimmed x stop en diverse = (trimmed_aa_x_stop_diverse_dict = {} en trimmed_nt_x_stop_diverse_dict = {})
-# nieuwe dict maken voor het tellen van de soorten base in prot alignment
-trimmed_aa_x_stop_diverse_dict = {}
-trimmed_nt_x_stop_diverse_dict = {}
-# Voor elk exon:
-for exon in exon_dict:
-    nseq = 0
-    for sample in exon_dict[exon]:
-        # Hoeveel sequenties zijn er
-        nseq += 1
-    # Bereken threshold (= sequenties * THRESHOLD)
-    diverse_thresh = nseq * DIVERSE_PERC_THRESH
-    for sample in trimmed_aa_x_stop_dict[exon]:
-        # Voor elk positie:
-        for aa_position in trimmed_aa_x_stop_dict[exon][sample]:
-            # Welke base komt het meest voor (=prevelant_base) EN hoeveel zijn dat er (= n_most_prevelant)
+# create dictionary to count different aa in each position
+count_aa_diversity = {}
+count_aa_diversity = create_empty_diversity_dict(count_aa_diversity, aa_dict, trimmed_aa_x_stop_dict)
+count_aa_diversity = count_diversity_dict(count_aa_diversity, trimmed_aa_x_stop_dict)
 
-            # Als n_most_prevelant > threshold:
-                # toevoegen aan trimmed_aa_x_stop_diverse_dict
-                # heel dat region geval
-                # toevoegen aan trimmed_nt_x_stop_diverse_dict
-            # else:
-                # print("in exon [exon] op position [position] komt base [prevalant_base] zo vaak: n_most_prevelant voor
-                # en dit is minde dan de threshold (threshold). Deze zijn kolommen zijn verwijderd")
+trimmed_nt_x_stop_diverse_dict = create_empty_final_dict(count_aa_diversity, aa_dict)
+trimmed_aa_x_stop_diverse_dict = create_empty_final_dict(count_aa_diversity, aa_dict)
+append_final_trimmed_dict(count_aa_diversity, aa_dict, trimmed_aa_x_stop_diverse_dict, trimmed_aa_x_stop_dict,
+                          trimmed_nt_x_stop_diverse_dict, trimmed_nt_x_stop_dict)
 
-# Deze moet dan pakken van trimmed_aa_x_stop_diverse_dict = {} en trimmed_nt_x_stop_diverse_dict
-'''Step 5: Create final dictionary for trimmed AA and NT sequences'''
-trimmed_dict = {}
-for exon in trimmed_aa_x_stop_dict:
-    trimmed_dict[exon] = {}
-    for sample in trimmed_aa_x_stop_dict[exon]:
-        trimmed_dict[exon][sample] = ""
-        for position in trimmed_aa_x_stop_dict[exon][sample]:
-            trimmed_dict[exon][sample] += trimmed_aa_x_stop_dict[exon][sample][position]
-
-# test
-print("trimmed aa sequences: ")
-print(trimmed_dict['AT5G05680.1@6'])
-print("\n")
-
-trimmed_nt_dict = {}
-for exon in trimmed_nt_x_stop_dict:
-    trimmed_nt_dict[exon] = {}
-    for sample in trimmed_nt_x_stop_dict[exon]:
-        trimmed_nt_dict[exon][sample] = ""
-        for position in trimmed_nt_x_stop_dict[exon][sample]:
-            trimmed_nt_dict[exon][sample] += trimmed_nt_x_stop_dict[exon][sample][position]
-
-# test
-print("trimmed nt sequences: ")
-print(trimmed_nt_dict['AT5G05680.1@6'])
-print("\n")
-
-
-'''Step 6: Write fasta files for trimmed AA and NT sequences in directory path_to_trimmed_prot_dir'''
-
-                # write_ffasta(path_to_ftrimmed_prot, record, protein_seq)
-
-# print(max_exons)
-
-
-
-
+'''Step 5: Write fasta files for trimmed AA and NT sequences in directory path_to_trimmed_prot_dir'''
+nt = "_NT.fasta"
+aa = "_AA.fasta"
+write_ffasta(trimmed_nt_x_stop_diverse_dict, path_to_trimmed_prot_dir, nt)
+write_ffasta(trimmed_aa_x_stop_diverse_dict, path_to_trimmed_prot_dir, aa)

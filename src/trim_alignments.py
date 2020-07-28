@@ -29,6 +29,7 @@ def create_dir(path):
 def create_ffasta(path):
     ftrimmed_exons = open(path, "w+")
     ftrimmed_exons.close()
+    print("File: " + path + " has been created.")
 
 
 def find_ref_start_end(record, ref_start, ref_end):
@@ -63,7 +64,6 @@ def append_trimmed_alignments(path_to_ftrimmed_exons, record, trimmed_alignment)
     ftrimmed_exons.write(">" + record.id + "\n")
     ftrimmed_exons.write(trimmed_alignment + "\n")
     ftrimmed_exons.close()
-    print("File: " + path_to_ftrimmed_exons + " has been created.")
 
 
 def create_YAML(path):
@@ -74,11 +74,11 @@ def create_YAML(path):
 
 
 # Code starts here
-path_to_alignments_dir = "results/11_aligned_exons_ORF/"
+path_to_alignments_dir = "results/A11_aligned_exons_ORF/"
 list_alignments = os.listdir(path_to_alignments_dir)
 sorted_list_alignments = natural_sort(list_alignments)
 
-path_to_trimmed_dir = "results/12_trimmed_alignments/"
+path_to_trimmed_dir = "results/A12_trimmed_alignments/"
 create_dir(path_to_trimmed_dir)
 
 for fexon in sorted_list_alignments:
@@ -95,43 +95,31 @@ for fexon in sorted_list_alignments:
         else:
             trimmed_alignment = ""
             trimmed_alignment = get_trimmed_alignment(trimmed_alignment, record)
-
-            '''delete if a codon position was too diverse (most prevalent amino acid identical for < 30% of the taxa)
-            VGM MOET DIT IN TRIM PLOT ALIGNMENTS'''
-            ### erase alignment site if the population is less than threshold amount of species ?????????
-            # nbase = 0
-            # for base in trimmed_alignment:
-            #     nbase += 1
-            #
-            # if nbase <= 30:
-            #     print(record.id)
-            #     print(nbase)
-
             append_trimmed_alignments(path_to_ftrimmed_exons, record, trimmed_alignment)
 
-# create .yaml for macse
-path_to_yaml = "./envs/macse.yaml"
-create_YAML(path_to_yaml)
-
-list_trimmed_exon_ffasta = os.listdir(path_to_trimmed_dir)
-sorted_list_trimmed_ffasta = natural_sort(list_trimmed_exon_ffasta)
-for trimmed_ffasta in sorted_list_alignments:
-    exon_name, fasta = trimmed_ffasta.split(".fasta")
-    macse_NT_output = "results/13_prot_alignments/" + exon_name + "_NT.fasta"
-
-    fYAML = open(path_to_yaml, "a+")
-    fYAML.write("    " + exon_name + ": " + macse_NT_output + "\n")
-    fYAML.close()
-
-fYAML = open(path_to_yaml, "a+")
-fYAML.write("exons_AA:\n")
-fYAML.close()
-
-for trimmed_ffasta in sorted_list_alignments:
-    exon_name, fasta = trimmed_ffasta.split(".fasta")
-    macse_AA_output = "results/13_prot_alignments/" + exon_name + "_AA.fasta"
-
-    fYAML = open(path_to_yaml, "a+")
-    fYAML.write("    " + exon_name + ": " + macse_AA_output + "\n")
-    fYAML.close()
-
+# # create .yaml for macse
+# path_to_yaml = "./envs/macse.yaml"
+# create_YAML(path_to_yaml)
+#
+# list_trimmed_exon_ffasta = os.listdir(path_to_trimmed_dir)
+# sorted_list_trimmed_ffasta = natural_sort(list_trimmed_exon_ffasta)
+# for trimmed_ffasta in sorted_list_alignments:
+#     exon_name, fasta = trimmed_ffasta.split(".fasta")
+#     macse_NT_output = "results/A13_prot_alignments/" + exon_name + "_NT.fasta"
+#
+#     fYAML = open(path_to_yaml, "a+")
+#     fYAML.write("    " + exon_name + ": " + macse_NT_output + "\n")
+#     fYAML.close()
+#
+# fYAML = open(path_to_yaml, "a+")
+# fYAML.write("exons_AA:\n")
+# fYAML.close()
+#
+# for trimmed_ffasta in sorted_list_alignments:
+#     exon_name, fasta = trimmed_ffasta.split(".fasta")
+#     macse_AA_output = "results/A13_prot_alignments/" + exon_name + "_AA.fasta"
+#
+#     fYAML = open(path_to_yaml, "a+")
+#     fYAML.write("    " + exon_name + ": " + macse_AA_output + "\n")
+#     fYAML.close()
+#

@@ -56,13 +56,13 @@ def create_YAML(path):
 path_to_orf_ref = "./data/exons/ref-at_orf.fasta"
 
 # list to loop over the samples
-path_to_consensus_dir = "./results/9_consensus_exons/"
+path_to_consensus_dir = "./results/A09_consensus_exons/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_consensus_dir = natural_sort(list_consensus_dir)
 
 
 # creates new dir for output and list to check if file already exists
-path_to_all_samples_exons_dir = "./results/10_all_samples_exons/"
+path_to_all_samples_exons_dir = "./results/A10_all_samples_exons/"
 create_dir(path_to_all_samples_exons_dir)
 list_exons_dir = os.listdir(path_to_all_samples_exons_dir)
 sorted_exons_dir = natural_sort(list_exons_dir)
@@ -82,7 +82,7 @@ for sample in sorted_consensus_dir:
         append_seq(path_to_fexon, path_to_fexon_consensus)
 
 # Creates configuration YAML file for MAFFT in envs exons dir
-path_to_fYAML = "./envs/exons.yaml"
+path_to_fYAML = "./envs/all_exons.yaml"
 create_YAML(path_to_fYAML)
 
 for fexon in sorted_exons_dir:
@@ -90,5 +90,5 @@ for fexon in sorted_exons_dir:
     exon_name, fasta = fexon.split(".fasta")
     exon_name = exon_name.strip()
     fYAML = open(path_to_fYAML, "a+")
-    fYAML.write("    " + exon_name + ": " + path_to_fexon + "\n")
+    fYAML.write("    - " + exon_name + "\n")
     fYAML.close()

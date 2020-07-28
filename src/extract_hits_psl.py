@@ -1,6 +1,6 @@
 # extract_hits_psl.py
 # This script is to extract the highest hits from psl files after BLAT
-# Can be executed by: $ python extract_hits_psl.py [SAMPLE_NAME], for example: $ python extract_hits_psl.py SRR8528336
+# Can be executed by: $ python extract_hits_psl.py [SAMPLE], for example: $ python extract_hits_psl.py SRR8528336
 # Made by: Elfy Ly
 # Date: 22 May 2020
 
@@ -11,7 +11,7 @@ import re
 from Bio import SearchIO
 from Bio import SeqIO
 
-SAMPLE_NAME = sys.argv[1]
+SAMPLE = sys.argv[1]
 PSL_HEADER_LINES = 5
 ID_PCT_CUTOFF = 75
 SCORE_CUTOFF = 20
@@ -97,7 +97,7 @@ def extract_hits(path_to_psl):
     return t_name_highest, q_name_highest, id_pct_highest, max_score
 
 
-# add highest BLAT scored exons hits per contig per SAMPLE_NAME in highest_hits.txt file
+# add highest BLAT scored exons hits per contig per SAMPLE in highest_hits.txt file
 def write_fhighest_hits(path_to_fhighest_hits, t_name_highest, q_name_highest, id_pct_highest, max_score):
     f = open(path_to_fhighest_hits, "a+")
     f.write(t_name_highest + "\t" + q_name_highest + "\t" + str(id_pct_highest) + "\t" + str(max_score) + "\n")
@@ -205,19 +205,31 @@ def append_contig_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_d
             exon_file.close()
 
 
-def create_YAML(path):
-    f = open(path, "w+")
-    f.write("exons:\n")
-    f.close()
-    print(path + " is created")
+def sample_exist(path):
+    fYAML = open(path, "rt")
+    for line in fYAML:
+        if SAMPLE in line:
+            return True
+
+
+def append_YAML(path, sorted_list_contigs):
+    fYAML = open(path, "a+")
+    fYAML.write(SAMPLE + ":\n")
+    pattern = "*.fasta"
+    for file in sorted_list_contigs:
+        if fnmatch.fnmatch(file, pattern):
+            exon_ffasta = file
+            exon_name, ffasta = exon_ffasta.split(".fasta")
+            fYAML.write("    - " + str(exon_name) + "\n")
+    fYAML.close()
 
 
 # # # Code starts here:
-path_to_mapped_contigs_dir = "results/4_mapped_contigs/"
+path_to_mapped_contigs_dir = "results/A04_mapped_contigs/"
 
 '''STEP 1: Checks all fragment overlaps between contigs and exons'''
 # creates separate dictionary for mapped contigs and target exons with their start and end position
-path_to_assembled_species_dir = path_to_mapped_contigs_dir + SAMPLE_NAME + "/"
+path_to_assembled_species_dir = path_to_mapped_contigs_dir + SAMPLE + "/"
 path_to_fmapped_contigs = path_to_assembled_species_dir + "mapped_contigs.txt"
 path_to_exons_enum = "./data/exons/AT_exon_enum.txt"
 dictionary_contigs = create_dictionary_start_end(path_to_fmapped_contigs)
@@ -227,7 +239,7 @@ dictionary_exons_lsorted = natural_sort(dictionary_exons)
 
 # add matching pairs in contig_exon_match_list.txt if mapped contig fragments matches/overlaps
 # with the exon fragments
-path_to_blat_species_dir = "./results/6_identified_contigs_blat/" + SAMPLE_NAME + "/"
+path_to_blat_species_dir = "./results/A06_identified_contigs_blat/" + SAMPLE + "/"
 path_to_blat_stats = path_to_blat_species_dir + "stats/"
 create_dir(path_to_blat_stats)
 
@@ -266,8 +278,8 @@ dictionary_hits_lsorted = natural_sort(dictionary_hits)
 dictionary_match_lsorted = natural_sort(dictionary_match)
 
 # create new mapped_exons dir for input
-path_to_mapped_exons = './results/7_mapped_exons/'
-path_to_mapped_exons_species_dir = path_to_mapped_exons + SAMPLE_NAME + "/"
+path_to_mapped_exons = './results/A07_mapped_exons/'
+path_to_mapped_exons_species_dir = path_to_mapped_exons + SAMPLE + "/"
 create_dir(path_to_mapped_exons)
 create_dir(path_to_mapped_exons_species_dir)
 
@@ -283,7 +295,7 @@ create_ftxt(path_to_fmultiple_contigs)
 
 # create path to append original exon and consensus sequences to the exon fasta files as MAFFT input
 path_to_fexons_seq = "./data/exons/exons_AT.fasta"
-path_to_consensus_dir = "./results/5_consensus_contigs/" + SAMPLE_NAME + "/"
+path_to_consensus_dir = "./results/A05_consensus_contigs/" + SAMPLE + "/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_list_consensus_dir = natural_sort(list_consensus_dir)
 
@@ -292,10 +304,11 @@ create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary
                    sorted_list_consensus_dir, path_to_consensus_dir, path_to_fmultiple_contigs, path_to_fno_match)
 
 '''STEP 5: Creates configuration files for MAFFT'''
+'''
 # creates configuration YAML file in envs MAFFT dir
 path_to_MAFFT_configs = "./envs/MAFFT/"
 create_dir(path_to_MAFFT_configs)
-path_to_fYAML = path_to_MAFFT_configs + SAMPLE_NAME + ".yaml"
+path_to_fYAML = path_to_MAFFT_configs + SAMPLE + ".yaml"
 create_YAML(path_to_fYAML)
 
 with open(path_to_fseq_exons, "rt") as fseq_exons:
@@ -306,3 +319,14 @@ with open(path_to_fseq_exons, "rt") as fseq_exons:
         fYAML.write("    " + exon_name + ": " + path_to_mapped_exons_species_dir + exon_name + ".fasta\n")
         fYAML.close()
 fseq_exons.close()
+'''
+
+path_to_exons_dir = './results/A07_mapped_exons/' + SAMPLE + '/'
+list_exons = os.listdir(path_to_exons_dir)
+sorted_list_exons = natural_sort(list_exons)
+
+path_to_exon_env = "./envs/config_exons.yaml"
+if not sample_exist(path_to_exon_env):
+    append_YAML(path_to_exon_env, sorted_list_exons)
+
+

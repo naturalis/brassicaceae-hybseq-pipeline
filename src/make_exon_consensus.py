@@ -101,12 +101,12 @@ def create_fconsensus_exon(path_to_fconsensus_exon, consensus_seq):
 
 
 # Code starts here
-path_to_consensus_exons_dir = "./results/9_consensus_exons/"
+path_to_consensus_exons_dir = "./results/A09_consensus_exons/"
 path_to_consensus_exons_species_dir = path_to_consensus_exons_dir + SAMPLE_NAME + "/"
 create_dir(path_to_consensus_exons_dir)
 create_dir(path_to_consensus_exons_species_dir)
 
-path_to_aligned_exon_dir = "./results/8_aligned_exons/" + SAMPLE_NAME + "/"
+path_to_aligned_exon_dir = "./results/A08_aligned_exons/" + SAMPLE_NAME + "/"
 aligned_exon_dir = os.listdir(path_to_aligned_exon_dir)
 sorted_assembled_exon_dir = natural_sort(aligned_exon_dir)
 consensus_dict = {}
@@ -124,3 +124,4 @@ for fassembled_exon in sorted_assembled_exon_dir:
     path_to_fconsensus_exon = path_to_consensus_exons_species_dir + fassembled_exon
     exon_name, fasta = fassembled_exon.split(".fasta")
     create_fconsensus_exon(path_to_fconsensus_exon, consensus_seq)
+
