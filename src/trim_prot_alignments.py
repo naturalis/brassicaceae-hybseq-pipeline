@@ -2,10 +2,11 @@
 # This script is to trim the protein aligned exons for all samples based on the ref exon in ORF.
 # The input will be the EXON_NAME_AA.fasta and the output will be a EXON_NAME_AA_trimmed.fasta file with their
 # trimmed protein alignments
-# This script can be executed by running $ python trim_prot_alignments.py
+# This script can be executed by running $ python trim_prot_alignments.py EXON_NAME
 # Made by: Elfy Ly
 # Date: 2 July 2020
 
+import sys
 import os
 import re
 import fnmatch
@@ -13,6 +14,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 
+EXON = sys.argv[1]
 ACGT_LENGTH_PERC_THRESH = 0.35
 NX_PERC_TRESH = 0.20
 DIVERSE_PERC_THRESH = 0.30
@@ -39,17 +41,18 @@ def create_ffasta(path):
 
 
 def replace_to_n(record):
-    nt_dict[exon_name][record.id] = {}
+    nt_dict[EXON][record.id] = {}
     position = 0
     new_seq = ""
     for base in record.seq:
         position += 1
-        nt_dict[exon_name][record.id][position] = base
         # change '!' fragment shifts and '-' gaps to 'N' in new sequence
         if base == "-" or base == "!":
             new_seq += "N"
+            nt_dict[EXON][record.id][position] = "N"
         else:
             new_seq += base
+            nt_dict[EXON][record.id][position] = base
     return new_seq
 
 
@@ -63,11 +66,11 @@ def count_bases(new_seq):
 
 # create empty dictionary to count x's per position
 def create_empty_nested_dict(new_dict, old_dict):
-    for exon in old_dict:
-        for sample in old_dict[exon]:
-            new_dict[exon] = {}
-            for position in old_dict[exon][sample]:
-                new_dict[exon][position] = 0
+# for exon in old_dict:
+    for sample in old_dict[EXON]:
+        new_dict[EXON] = {}
+        for position in old_dict[EXON][sample]:
+            new_dict[EXON][position] = 0
     return new_dict
 
 
@@ -215,51 +218,52 @@ def write_ffasta(final_trimmed_dict, path_to_trimmed_prot_dir, extension):
 
 # Code starts here
 path_to_macse_dir = "./results/A13_prot_alignments/"
-list_macse_dir = os.listdir(path_to_macse_dir)
-sorted_list_macse_dir = natural_sort(list_macse_dir)
+# list_macse_dir = os.listdir(path_to_macse_dir)
+# sorted_list_macse_dir = natural_sort(list_macse_dir)
 
 path_to_trimmed_prot_dir = "./results/A14_trimmed_prot/"
 create_dir(path_to_trimmed_prot_dir)
 
-pattern = "*_NT.fasta"
+# pattern = "*_NT.fasta"
 
-max_exons = 0
+# max_exons = 0
 aa_dict = {}
 nt_dict = {}
-for file in sorted_list_macse_dir:
-    if fnmatch.fnmatch(file, pattern):
-        fNT_alignments = file
-        name, fasta = fNT_alignments.split(".fasta")
-        exon_name, nt = name.split("_")
-        max_exons += 1
+# for file in sorted_list_macse_dir:
+#     if fnmatch.fnmatch(file, pattern):
+# fNT_alignments = file
+# name, fasta = fNT_alignments.split(".fasta")
+# exon_name, nt = name.split("_")
+# max_exons += 1
 
-        path_to_fNT = path_to_macse_dir + fNT_alignments
-        aa_dict[exon_name] = {}
-        nt_dict[exon_name] = {}
-        for record in SeqIO.parse(path_to_fNT, "fasta"):
-            # create new sequence to translate gaps and frameshifts to 'N'
-            new_seq = replace_to_n(record)
-            '''Step 1: Deletes the sample if sequence base length too short (if too many gaps or fragment shifts)
-            Final sequences shorter than 35% of unambiguous nucleotide positions based on the reference exon length 
-            were removed.'''
-            nbase = len(record.seq)
-            min_nbases = nbase * ACGT_LENGTH_PERC_THRESH
-            nbase_ACGT = count_bases(new_seq)
-            if nbase_ACGT > min_nbases:
-                # translate dna sequence to protein sequence
-                nt_seq = Seq(new_seq, generic_dna)
-                protein_seq = nt_seq.translate()
+fNT_alignment = EXON + "_NT.fasta"
+path_to_fNT = path_to_macse_dir + fNT_alignment
+aa_dict[EXON] = {}
+nt_dict[EXON] = {}
+for record in SeqIO.parse(path_to_fNT, "fasta"):
+    # create new sequence to translate gaps and frameshifts to 'N'
+    new_seq = replace_to_n(record)
+    '''Step 1: Deletes the sample if sequence base length too short (if too many gaps or fragment shifts)
+    Final sequences shorter than 35% of unambiguous nucleotide positions based on the reference exon length 
+    were removed.'''
+    new_seq_len = len(record.seq)
+    min_nbases = new_seq_len * ACGT_LENGTH_PERC_THRESH
+    nbase_ACGT = count_bases(new_seq)
+    if nbase_ACGT > min_nbases:
+        # translate dna sequence to protein sequence
+        nt_seq = Seq(new_seq, generic_dna)
+        protein_seq = nt_seq.translate()
 
-                # assign amino acid per position in aa_dict
-                position = 0
-                aa_dict[exon_name][record.id] = {}
-                for aa in protein_seq:
-                    position += 1
-                    aa_dict[exon_name][record.id][position] = aa
-                protein_seq_length = len(protein_seq)
-            else:
-                print(record.id + " has too few nucleotide bases: " + str(nbase_ACGT) +
-                      ". It's below min_bases: " + str(min_nbases)) + ". This sample has been deleted."
+        # assign amino acid per position in aa_dict
+        position = 0
+        aa_dict[EXON][record.id] = {}
+        for aa in protein_seq:
+            position += 1
+            aa_dict[EXON][record.id][position] = aa
+        protein_seq_length = len(protein_seq)
+    else:
+        print(record.id + " has too few nucleotide bases: " + str(nbase_ACGT) +
+              ". It's below min_bases: " + str(min_nbases)) + ". This sample has been deleted from " + EXON + "."
 
 # evaluate protein alignment
 '''Step 2: Calculates per exon for every position the number of X's. Positions with > 20% ambiguous amino acids 

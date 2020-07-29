@@ -85,10 +85,9 @@ for sample in sorted_consensus_dir:
 path_to_fYAML = "./envs/all_exons.yaml"
 create_YAML(path_to_fYAML)
 
+fYAML = open(path_to_fYAML, "a+")
 for fexon in sorted_exons_dir:
-    path_to_fexon = path_to_all_samples_exons_dir + fexon
     exon_name, fasta = fexon.split(".fasta")
     exon_name = exon_name.strip()
-    fYAML = open(path_to_fYAML, "a+")
     fYAML.write("    - " + exon_name + "\n")
-    fYAML.close()
+fYAML.close()

@@ -14,6 +14,7 @@ import fnmatch
 SAMPLE_NAME = sys.argv[1]
 N_TABS = 10
 
+
 # Create directory of given path if it doesn't exist
 def create_dir(path):
     if not os.path.exists(path):
@@ -65,13 +66,13 @@ def natural_sort(l):
 def sample_exist(path):
     fYAML = open(path, "rt")
     for line in fYAML:
-        if SAMPLE in line:
+        if SAMPLE_NAME in line:
             return True
 
 
 def append_YAML(path, sorted_list_contigs):
     fYAML = open(path, "a+")
-    fYAML.write(SAMPLE + ":\n")
+    fYAML.write(SAMPLE_NAME + ":\n")
     pattern = "*.sam"
     for file in sorted_list_contigs:
         if fnmatch.fnmatch(file, pattern):
@@ -184,7 +185,7 @@ for sample in sorted_list_samples:
 '''
 
 # Creates YAML environment for all contigs per sample
-path_to_sam_dir = './results/A04_mapped_contigs/' + SAMPLE + "/sam"
+path_to_sam_dir = './results/A04_mapped_contigs/' + SAMPLE_NAME + "/sam"
 list_contigs = os.listdir(path_to_sam_dir)
 sorted_list_contigs = natural_sort(list_contigs)
 

@@ -1,14 +1,17 @@
 # trim_alignments.py
 # This script is to trim the aligned exons for all samples based on the ref exon in ORF.
 # The input will be the EXON_NAME.fasta file and the output will be a EXON_NAME.fasta file with the trimmed alignments
-# This script can be executed by running $ python trim_alignments.py
+# This script can be executed by running $ python trim_alignments.py EXON_NAME
 # Made by: Elfy Ly
 # Date: 30 June 2020
 
-
+import sys
 import re
 import os
 from Bio import SeqIO
+
+
+EXON = sys.argv[1]
 
 
 def natural_sort(l):
@@ -75,27 +78,28 @@ def create_YAML(path):
 
 # Code starts here
 path_to_alignments_dir = "results/A11_aligned_exons_ORF/"
-list_alignments = os.listdir(path_to_alignments_dir)
-sorted_list_alignments = natural_sort(list_alignments)
+# list_alignments = os.listdir(path_to_alignments_dir)
+# sorted_list_alignments = natural_sort(list_alignments)
 
 path_to_trimmed_dir = "results/A12_trimmed_alignments/"
 create_dir(path_to_trimmed_dir)
 
-for fexon in sorted_list_alignments:
-    path_to_fexon = path_to_alignments_dir + fexon
-    path_to_ftrimmed_exons = path_to_trimmed_dir + fexon
-    create_ffasta(path_to_ftrimmed_exons)
+# for fexon in sorted_list_alignments:
+fexon = EXON + ".fasta"
+path_to_fexon = path_to_alignments_dir + fexon
+path_to_ftrimmed_exon = path_to_trimmed_dir + fexon
+create_ffasta(path_to_ftrimmed_exon)
 
-    ref_start = 0
-    ref_end = 0
-    for record in SeqIO.parse(path_to_fexon, "fasta"):
-        # record.id starting with AT is the ref seq in ORF
-        if record.id.startswith("AT"):
-            ref_start, ref_end = find_ref_start_end(record, ref_start, ref_end)
-        else:
-            trimmed_alignment = ""
-            trimmed_alignment = get_trimmed_alignment(trimmed_alignment, record)
-            append_trimmed_alignments(path_to_ftrimmed_exons, record, trimmed_alignment)
+ref_start = 0
+ref_end = 0
+for record in SeqIO.parse(path_to_fexon, "fasta"):
+    # record.id starting with AT is the ref seq in ORF
+    if record.id.startswith("AT"):
+        ref_start, ref_end = find_ref_start_end(record, ref_start, ref_end)
+    else:
+        trimmed_alignment = ""
+        trimmed_alignment = get_trimmed_alignment(trimmed_alignment, record)
+        append_trimmed_alignments(path_to_ftrimmed_exon, record, trimmed_alignment)
 
 # # create .yaml for macse
 # path_to_yaml = "./envs/macse.yaml"
