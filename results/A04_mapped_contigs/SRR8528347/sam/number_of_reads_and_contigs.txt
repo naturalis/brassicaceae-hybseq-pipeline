@@ -1,0 +1,2 @@
+Number of reads: 1368145
+Number of contigs: 2304
