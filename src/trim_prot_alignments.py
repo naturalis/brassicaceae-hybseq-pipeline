@@ -9,7 +9,6 @@
 import sys
 import os
 import re
-import fnmatch
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
@@ -218,26 +217,13 @@ def write_ffasta(final_trimmed_dict, path_to_trimmed_prot_dir, extension):
 
 # Code starts here
 path_to_macse_dir = "./results/A13_prot_alignments/"
-# list_macse_dir = os.listdir(path_to_macse_dir)
-# sorted_list_macse_dir = natural_sort(list_macse_dir)
-
 path_to_trimmed_prot_dir = "./results/A14_trimmed_prot/"
 create_dir(path_to_trimmed_prot_dir)
 
-# pattern = "*_NT.fasta"
-
-# max_exons = 0
 aa_dict = {}
 nt_dict = {}
-# for file in sorted_list_macse_dir:
-#     if fnmatch.fnmatch(file, pattern):
-# fNT_alignments = file
-# name, fasta = fNT_alignments.split(".fasta")
-# exon_name, nt = name.split("_")
-# max_exons += 1
 
-fNT_alignment = EXON + "_NT.fasta"
-path_to_fNT = path_to_macse_dir + fNT_alignment
+path_to_fNT = path_to_macse_dir + EXON + "_NT.fasta"
 aa_dict[EXON] = {}
 nt_dict[EXON] = {}
 for record in SeqIO.parse(path_to_fNT, "fasta"):
