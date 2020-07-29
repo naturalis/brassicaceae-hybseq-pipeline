@@ -13,7 +13,7 @@ for exon in exons:
     trim_var.append(f"results/A12_trimmed_alignments/{exon}.fasta")
     macse_aa_var.append(f"results/A13_prot_alignments/{exon}_AA.fasta")
     macse_nt_var.append(f"results/A13_prot_alignments/{exon}_NT.fasta")
-    trim_prot_aa_var.append(f"results/A14_trimmed_prot/{exon}_AA.fasta")
+    trim_prot_aa_var.append(f"results/A14_trimmed_prot/{exon}_aa.fasta")
     trim_prot_nt_var.append(f"results/A14_trimmed_prot/{exon}_NT.fasta")
 
 
@@ -40,11 +40,14 @@ rule MAFFT_assembly:
 
 rule trim_alignments:
     input:
-         "src/trim_alignments.py"
+         script = "src/trim_alignments.py",
+         file = "results/A11_aligned_exons_ORF/{exon}.fasta",
     output:
           "results/A12_trimmed_alignments/{exon}.fasta"
+    params:
+          exon = "{exon}"
     shell:
-         "python {input}"
+         "python {input.script} {params.exon}"
 
 rule macse:
     input:
@@ -57,9 +60,12 @@ rule macse:
 
 rule trim_prot_alignments:
     input:
-        "src/trim_prot_alignments.py"
+        script = "src/trim_prot_alignments.py",
+        file = "results/A13_prot_alignments/{exon}_NT.fasta"
     output:
         NT = "results/A14_trimmed_prot/{exon}_NT.fasta",
         AA = "results/A14_trimmed_prot/{exon}_aa.fasta"
+    params:
+        exon = "{exon}"
     shell:
-        "python {input}"
+        "python {input.script} {params.exon}"

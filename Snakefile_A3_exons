@@ -30,7 +30,7 @@ rule MAFFT_assembly:
 rule make_exon_consensus:
     input:
         script = "src/make_exon_consensus.py",
-        file = "results/A08_aligned_exons/"
+        file = "results/A08_aligned_exons/{sample}/{exon}.fasta"
     output:
         "results/A09_consensus_exons/{sample}/{exon}.fasta"
     params:
