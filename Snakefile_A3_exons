@@ -1,5 +1,5 @@
 configfile: "./envs/config_exons.yaml"
-SAMPLES = "SRR8528347 SRR8528355 SRR8528356".split()
+SAMPLES = "SRR8528371 SRR8528366".split()
 
 # variables for rule all:
 mafft_variables = []
@@ -7,9 +7,8 @@ make_exon_consensus = []
 for sample in SAMPLES:
     exons = config[sample]
     for exon in exons:
-        mafft_variables.append(f"results/A08_aligned_exons/{sample}/{exon}.fasta")
-        make_exon_consensus.append(f"results/A09_consensus_exons/{sample}/{exon}.fasta")
-
+        mafft_variables.append("results/A08_aligned_exons/{sample}/{exon}.fasta".format(sample=sample, exon=exon))
+        make_exon_consensus.append("results/A09_consensus_exons/{sample}/{exon}.fasta".format(sample=sample, exon=exon))
 
 rule all:
     input:

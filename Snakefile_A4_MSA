@@ -1,31 +1,22 @@
 configfile: "./envs/all_exons.yaml"
 
 #variables for rule all
-mafft_var = []
-trim_var = []
-macse_aa_var = []
-macse_nt_var = []
-trim_prot_aa_var = []
-trim_prot_nt_var = []
-exons = config["exons"]
-for exon in exons:
-    mafft_var.append(f"results/A11_aligned_exons_ORF/{exon}.fasta")
-    trim_var.append(f"results/A12_trimmed_alignments/{exon}.fasta")
-    macse_aa_var.append(f"results/A13_prot_alignments/{exon}_AA.fasta")
-    macse_nt_var.append(f"results/A13_prot_alignments/{exon}_NT.fasta")
-    trim_prot_aa_var.append(f"results/A14_trimmed_prot/{exon}_aa.fasta")
-    trim_prot_nt_var.append(f"results/A14_trimmed_prot/{exon}_NT.fasta")
+mafft_var = expand("results/A11_aligned_exons_ORF/{exon}.fasta", exon=config["exons"])
+trim_var = expand("results/A12_trimmed_alignments/{exon}.fasta", exon=config["exons"])
+macse_aa_var = expand("results/A13_prot_alignments/{exon}_AA.fasta", exon=config["exons"])
+macse_nt_var = expand("results/A13_prot_alignments/{exon}_NT.fasta", exon=config["exons"])
+trim_prot_aa_var = expand("results/A14_trimmed_prot/{exon}_aa.fasta", exon=config["exons"])
+trim_prot_nt_var = expand("results/A14_trimmed_prot/{exon}_NT.fasta", exon=config["exons"])
 
 
 rule all:
     input:
-        mafft_var,
-        trim_var,
+        #mafft_var,
+        #trim_var,
         macse_aa_var,
         macse_nt_var,
         trim_prot_aa_var,
         trim_prot_nt_var
-
 
 rule MAFFT_assembly:
     input:

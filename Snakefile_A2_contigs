@@ -13,13 +13,13 @@ extract_hits_psl = []
 for sample in SAMPLES:
     contig_nrs = config[sample]
     for nr in contig_nrs:
-        # bam.append(f"results/A04_mapped_contigs/{sample}/bam/Contig{nr}_AT.bam")
-        # sort_bam.append(f"results/A04_mapped_contigs/{sample}/sorted_bam/Contig{nr}_AT_sort.bam")
-        # fpileup.append(f"results/A04_mapped_contigs/{sample}/pileup/Contig{nr}_AT_sort.pileup")
-        var_variables.append(f"results/A04_mapped_contigs/{sample}/var/Contig{nr}_AT_sort.var")
-        make_contig_consensus.append(f"results/A05_consensus_contigs/{sample}/Contig{nr}.fasta")
-        blat_variables.append(f"results/A06_identified_contigs_blat/{sample}/contig{nr}_AT.psl")
-        extract_hits_psl.append(f"results/A07_mapped_exons/{sample}/")
+        # bam.append("results/A04_mapped_contigs/{sample}/bam/Contig{nr}_AT.bam".format(sample=sample, nr=nr))
+        # sort_bam.append("results/A04_mapped_contigs/{sample}/sorted_bam/Contig{nr}_AT_sort.bam".format(sample=sample, nr=nr))
+        # fpileup.append("results/A04_mapped_contigs/{sample}/pileup/Contig{nr}_AT_sort.pileup".format(sample=sample, nr=nr))
+        var_variables.append("results/A04_mapped_contigs/{sample}/var/Contig{nr}_AT_sort.var".format(sample=sample, nr=nr))
+        make_contig_consensus.append("results/A05_consensus_contigs/{sample}/Contig{nr}.fasta".format(sample=sample, nr=nr))
+        blat_variables.append("results/A06_identified_contigs_blat/{sample}/contig{nr}_AT.psl".format(sample=sample, nr=nr))
+        extract_hits_psl.append("results/A07_mapped_exons/{sample}/".format(sample=sample, nr=nr))
 
 rule all:
     input:
