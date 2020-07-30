@@ -4,20 +4,21 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
+  - snakemake =3.13.3
   - trimmomatic =0.33
   - fastx_toolkit =0.0.14
   - python =2.7             # alignreads.py
   - biopython =1.76         # YASRA
-  - lastz                   # YASRA
+  - lastz =1.0.4            # YASRA
   - mummer =3.23            # YASRA
   - varscan =2.4.1
-  - samtools
+  - samtools =1.3.1
   - blat =35
-  #- mafft =6.851    #doet niet --oldgenafpair gebruiken
+  - mafft =7.310            #=6.851 doet niet --oldgenafpair gebruiken
   - raxml =8.2.9
   - macse =1.2
-  - ucsc-fatotwobit
-  - ucsc-twobittofa
+  - ucsc-fatotwobit =377
+  - ucsc-twobittofa =377
   # astral II
   # trespex
   # treecmp
