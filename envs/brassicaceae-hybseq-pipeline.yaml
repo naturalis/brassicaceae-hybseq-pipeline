@@ -4,7 +4,7 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
-  - snakemake =3.13.3
+#  - snakemake =3.13.3      # crasht
   - trimmomatic =0.33
   - fastx_toolkit =0.0.14
   - python =2.7             # alignreads.py
