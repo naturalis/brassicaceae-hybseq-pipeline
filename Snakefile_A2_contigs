@@ -1,5 +1,5 @@
 # variables for every species
-SAMPLES = "SRR8528347 SRR8528355 SRR8528356".split()
+SAMPLES = "SRR8528336 SRR8528337".split()
 
 configfile: "./envs/config_contigs.yaml"
 
@@ -75,10 +75,8 @@ rule make_contig_consensus:
         file = "results/A04_mapped_contigs/{sample}/var/Contig{nr}_AT_sort.var"
     output:
         "results/A05_consensus_contigs/{sample}/Contig{nr}.fasta"
-    params:
-        "{sample}"
     shell:
-        "python3 {input.script} {params}"
+        "python3 {input.script} {input.file}"
 
 rule BLAT_assembled:
     input:
