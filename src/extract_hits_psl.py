@@ -304,29 +304,10 @@ create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary
                    sorted_list_consensus_dir, path_to_consensus_dir, path_to_fmultiple_contigs, path_to_fno_match)
 
 '''STEP 5: Creates configuration files for MAFFT'''
-'''
-# creates configuration YAML file in envs MAFFT dir
-path_to_MAFFT_configs = "./envs/MAFFT/"
-create_dir(path_to_MAFFT_configs)
-path_to_fYAML = path_to_MAFFT_configs + SAMPLE + ".yaml"
-create_YAML(path_to_fYAML)
-
-with open(path_to_fseq_exons, "rt") as fseq_exons:
-    for line in fseq_exons:
-        contig_name, exon_name = line.split("\t")
-        exon_name = exon_name.strip()
-        fYAML = open(path_to_fYAML, "a+")
-        fYAML.write("    " + exon_name + ": " + path_to_mapped_exons_species_dir + exon_name + ".fasta\n")
-        fYAML.close()
-fseq_exons.close()
-'''
-
-path_to_exons_dir = './results/A07_mapped_exons/' + SAMPLE + '/'
-list_exons = os.listdir(path_to_exons_dir)
+list_exons = os.listdir(path_to_mapped_exons_species_dir)
 sorted_list_exons = natural_sort(list_exons)
 
 path_to_exon_env = "./envs/config_exons.yaml"
 if not sample_exist(path_to_exon_env):
     append_YAML(path_to_exon_env, sorted_list_exons)
-
 

@@ -1,4 +1,4 @@
-SAMPLES = "SRR8528376 SRR8528377".split()
+SAMPLES = "S0301 S0377".split()
 FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
 
 raw_reads_samples = expand("data/raw_reads/{sample}_count_reads.txt", sample = SAMPLES)
@@ -11,13 +11,13 @@ extract_contigs = expand("results/A04_mapped_contigs/{sample}/sam", sample = SAM
 
 rule all:
     input:
-        raw_reads_samples,
-        count_trimmed_reads,
-        dedupl_var,
-        combine,
-        count_dedupl_reads,
-        alignreads,
-        extract_contigs
+        raw_reads_samples
+        #count_trimmed_reads,
+        #dedupl_var,
+        #combine,
+        #count_dedupl_reads,
+        #alignreads,
+        #extract_contigs
 
 rule count_raw_reads:
     input:
@@ -25,9 +25,12 @@ rule count_raw_reads:
         reverse="data/raw_reads/{sample}_2.fastq"
     output:
         "data/raw_reads/{sample}_count_reads.txt"
+    params:
+        naturalis="@A00",
+        nikolov="@SRR"
     shell:
-        "echo $(cat {input.forward} | grep '@SRR' | wc -l) + $(cat {input.reverse} | grep '@SRR' | wc -l) | "
-        "bc > {output}"
+        "echo $(cat {input.forward} | grep {params.naturalis} | wc -l) + $(cat {input.reverse} | "
+        "grep {params.naturalis}  | wc -l) | bc > {output}"
 
 rule trimming:
     input:
@@ -53,15 +56,15 @@ rule count_trimmed_reads:
 
 rule deduplication:
     input:
-        "results/A01_trimmed_reads/{{sample}}/{{sample}}_{frpu}.fq"
+        "results/A01_trimmed_reads/{sample}/{sample}_{frpu}.fq"
     output:
-        "results/A02_deduplicated_reads/{{sample}}/{{sample}}_{frpu}_dedupl.fq"
+        "results/A02_deduplicated_reads/{sample}/{sample}_{frpu}_dedupl.fq"
     shell:
         "fastx_collapser -v -i {input} -o {output}"
 
 rule combine:
     input:
-        expand("results/A02_deduplicated_reads/{{sample}}/{{sample}}_{FRPU}_dedupl.fq", FRPU = FRPU)
+        expand("results/A02_deduplicated_reads/{{sample}}/{{sample}}_{FRPU}_dedupl.fq", FRPU=FRPU)
     output:
         "results/A02_deduplicated_reads/{sample}/{sample}_reads.fq"
     shell:
@@ -94,7 +97,7 @@ rule alignreads:
         "--proportion-base-filter 0.7- "
         "--output-directory {output}"
 
-# extract contigs from created SAM file after YASRA and create per contig new SAM files with headers
+# create per contig new SAM files with headers from created SAM file after YASRA
 rule extract_contigs:
     input:
         "src/extract_contigs_YASRA.py"
