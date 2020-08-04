@@ -1,17 +1,16 @@
 # extract_hits_psl.py
 # This script is to extract the highest hits from psl files after BLAT
-# Can be executed by: $ python extract_hits_psl.py [SAMPLE], for example: $ python extract_hits_psl.py SRR8528336
+# Can be executed by: $ python extract_hits_psl.py [SAMPLE_NAME], for example: $ python extract_hits_psl.py SRR8528336
 # Made by: Elfy Ly
 # Date: 22 May 2020
 
 import sys
-import os
-import fnmatch
+import os, fnmatch
 import re
 from Bio import SearchIO
 from Bio import SeqIO
 
-SAMPLE = sys.argv[1]
+SAMPLE_NAME = sys.argv[1]
 PSL_HEADER_LINES = 5
 ID_PCT_CUTOFF = 75
 SCORE_CUTOFF = 20
@@ -97,7 +96,7 @@ def extract_hits(path_to_psl):
     return t_name_highest, q_name_highest, id_pct_highest, max_score
 
 
-# add highest BLAT scored exons hits per contig per SAMPLE in highest_hits.txt file
+# add highest BLAT scored exons hits per contig per SAMPLE_NAME in highest_hits.txt file
 def write_fhighest_hits(path_to_fhighest_hits, t_name_highest, q_name_highest, id_pct_highest, max_score):
     f = open(path_to_fhighest_hits, "a+")
     f.write(t_name_highest + "\t" + q_name_highest + "\t" + str(id_pct_highest) + "\t" + str(max_score) + "\n")
@@ -175,61 +174,47 @@ def create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictio
                     if match_exon != temporary_exon:
                         create_ftxt(path_to_fexon)
                         write_fstat(path_to_fseq_exons, hit_contig, hit_exon)
-                        append_exon_seq(path_to_fexons_seq, hit_exon, path_to_fexon)
-                        append_contig_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
+                        for record in SeqIO.parse(path_to_fexons_seq, "fasta"):
+                            at, exon_name = record.id.split("_")
+                            if hit_exon == exon_name:
+                                fexon = open(path_to_fexon, "a+")
+                                fexon.write(">" + exon_name + "\n")
+                                fexon.write(str(record.seq) + "\n")
+                        append_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
                         temporary_exon = match_exon
                     elif match_exon == temporary_exon:
-                        append_contig_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
+                        append_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon)
                         write_fstat(path_to_fmultiple_contigs, hit_contig, hit_exon)
                 else:
                     write_fstat(path_to_fno_match, hit_contig, hit_exon)
 
 
-def append_exon_seq(path_to_fexons_seq, hit_exon, path_to_fexon):
-    for record in SeqIO.parse(path_to_fexons_seq, "fasta"):
-        if hit_exon == record.id:
-            fexon = open(path_to_fexon, "a+")
-            fexon.write(">" + record.id + "\n")
-            fexon.write(str(record.seq) + "\n")
-
-
-def append_contig_seq(sorted_list_consensus_dir, hit_contig, path_to_consensus_dir, path_to_fexon):
-    for name_file in sorted_list_consensus_dir:
-        name, fasta = name_file.split('.')
-        if hit_contig == name:
-            path_to_fseq = path_to_consensus_dir + name + '.fasta'
+def append_seq(sorted_dir_list, match_name, path_to_seq_dir, path_to_fexon):
+    for name_file in sorted_dir_list:
+        name, txt = name_file.split('.')
+        if match_name == name:
+            path_to_fseq = path_to_seq_dir + name + '.txt'
+            fseq = open(path_to_fseq, 'rt')
             exon_file = open(path_to_fexon, "a+")
-            for record in SeqIO.parse(path_to_fseq, "fasta"):
-                exon_file.write(">" + record.id + "\n")
-                exon_file.write(str(record.seq) + "\n")
+            for line in fseq:
+                exon_file.write(line)
+            fseq.close()
             exon_file.close()
 
 
-def sample_exist(path):
-    fYAML = open(path, "rt")
-    for line in fYAML:
-        if SAMPLE in line:
-            return True
-
-
-def append_YAML(path, sorted_list_contigs):
-    fYAML = open(path, "a+")
-    fYAML.write(SAMPLE + ":\n")
-    pattern = "*.fasta"
-    for file in sorted_list_contigs:
-        if fnmatch.fnmatch(file, pattern):
-            exon_ffasta = file
-            exon_name, ffasta = exon_ffasta.split(".fasta")
-            fYAML.write("    - " + str(exon_name) + "\n")
-    fYAML.close()
+def create_YAML(path):
+    f = open(path, "w+")
+    f.write("exons:\n")
+    f.close()
+    print(path + " is created")
 
 
 # # # Code starts here:
-path_to_mapped_contigs_dir = "results/A04_mapped_contigs/"
+path_to_mapped_contigs_dir = "results/4_mapped_contigs/"
 
 '''STEP 1: Checks all fragment overlaps between contigs and exons'''
 # creates separate dictionary for mapped contigs and target exons with their start and end position
-path_to_assembled_species_dir = path_to_mapped_contigs_dir + SAMPLE + "/"
+path_to_assembled_species_dir = path_to_mapped_contigs_dir + SAMPLE_NAME + "/"
 path_to_fmapped_contigs = path_to_assembled_species_dir + "mapped_contigs.txt"
 path_to_exons_enum = "./data/exons/AT_exon_enum.txt"
 dictionary_contigs = create_dictionary_start_end(path_to_fmapped_contigs)
@@ -239,7 +224,7 @@ dictionary_exons_lsorted = natural_sort(dictionary_exons)
 
 # add matching pairs in contig_exon_match_list.txt if mapped contig fragments matches/overlaps
 # with the exon fragments
-path_to_blat_species_dir = "./results/A06_identified_contigs_blat/" + SAMPLE + "/"
+path_to_blat_species_dir = "./results/6_identified_contigs_blat/" + SAMPLE_NAME + "/"
 path_to_blat_stats = path_to_blat_species_dir + "stats/"
 create_dir(path_to_blat_stats)
 
@@ -268,7 +253,6 @@ create_fhits(path_to_fhighest_hits_filtered)
 create_ftxt(path_to_fbelow_cutoff)
 check_cutoff(path_to_fhighest_hits, path_to_fhighest_hits_filtered, path_to_fbelow_cutoff)
 
-
 '''STEP 4: Check if highest_hits_filtered.txt matches are also overlapped fragments in contig_exon_match_list.txt
 If yes: creates new .fasta file for MAFFT input'''
 # create dictionaries for highest_hits_filtered.txt and contig_exon_match_list.txt
@@ -278,8 +262,8 @@ dictionary_hits_lsorted = natural_sort(dictionary_hits)
 dictionary_match_lsorted = natural_sort(dictionary_match)
 
 # create new mapped_exons dir for input
-path_to_mapped_exons = './results/A07_mapped_exons/'
-path_to_mapped_exons_species_dir = path_to_mapped_exons + SAMPLE + "/"
+path_to_mapped_exons = './results/7_mapped_exons/'
+path_to_mapped_exons_species_dir = path_to_mapped_exons + SAMPLE_NAME + "/"
 create_dir(path_to_mapped_exons)
 create_dir(path_to_mapped_exons_species_dir)
 
@@ -294,8 +278,8 @@ create_ftxt(path_to_fno_match)
 create_ftxt(path_to_fmultiple_contigs)
 
 # create path to append original exon and consensus sequences to the exon fasta files as MAFFT input
-path_to_fexons_seq = "./data/exons/exons_AT.fasta"
-path_to_consensus_dir = "./results/A05_consensus_contigs/" + SAMPLE + "/"
+path_to_fexons_seq = "./data/exons/ref-at_orf.fasta"
+path_to_consensus_dir = "./results/5_consensus_contigs/" + SAMPLE_NAME + "/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_list_consensus_dir = natural_sort(list_consensus_dir)
 
@@ -304,10 +288,17 @@ create_exon_ffasta(dictionary_hits_lsorted, dictionary_match_lsorted, dictionary
                    sorted_list_consensus_dir, path_to_consensus_dir, path_to_fmultiple_contigs, path_to_fno_match)
 
 '''STEP 5: Creates configuration files for MAFFT'''
-list_exons = os.listdir(path_to_mapped_exons_species_dir)
-sorted_list_exons = natural_sort(list_exons)
+# creates configuration YAML file in envs MAFFT dir
+path_to_MAFFT_configs = "./envs/MAFFT/"
+create_dir(path_to_MAFFT_configs)
+path_to_fYAML = path_to_MAFFT_configs + SAMPLE_NAME + ".yaml"
+create_YAML(path_to_fYAML)
 
-path_to_exon_env = "./envs/config_exons.yaml"
-if not sample_exist(path_to_exon_env):
-    append_YAML(path_to_exon_env, sorted_list_exons)
-
+with open(path_to_fseq_exons, "rt") as fseq_exons:
+    for line in fseq_exons:
+        contig_name, exon_name = line.split("\t")
+        exon_name = exon_name.strip()
+        fYAML = open(path_to_fYAML, "a+")
+        fYAML.write("    " + exon_name + ": " + path_to_mapped_exons_species_dir + exon_name + ".fasta\n")
+        fYAML.close()
+fseq_exons.close()

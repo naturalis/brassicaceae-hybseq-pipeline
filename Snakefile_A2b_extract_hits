@@ -1,0 +1,19 @@
+# variables for every species
+SAMPLES = "test1 test2".split()
+
+extract_hits_psl = []
+for sample in SAMPLES:
+    extract_hits_psl.append("results/A07_mapped_exons/{sample}/stats/sequenced_exons.txt".format(sample=sample))
+
+
+rule extract_hits_psl:
+    input:
+        script = "src/extract_hits_psl.py"
+        # file = "results/A06_identified_contigs_blat/{sample}/contig{nr}_AT.psl"
+    output:
+        "results/A07_mapped_exons/{sample}/stats/sequenced_exons.txt"
+    params:
+        sample="{sample}"
+    shell:
+        "python {input.script} {params.sample}"
+

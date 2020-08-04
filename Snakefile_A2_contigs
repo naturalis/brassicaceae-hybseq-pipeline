@@ -1,5 +1,5 @@
 # variables for every species
-SAMPLES = "SRR8528336 SRR8528337".split()
+SAMPLES = "S0301 S0377".split()
 
 configfile: "./envs/config_contigs.yaml"
 
@@ -9,7 +9,6 @@ configfile: "./envs/config_contigs.yaml"
 var_variables = []
 make_contig_consensus = []
 blat_variables = []
-extract_hits_psl = []
 for sample in SAMPLES:
     contig_nrs = config[sample]
     for nr in contig_nrs:
@@ -19,7 +18,6 @@ for sample in SAMPLES:
         var_variables.append("results/A04_mapped_contigs/{sample}/var/Contig{nr}_AT_sort.var".format(sample=sample, nr=nr))
         make_contig_consensus.append("results/A05_consensus_contigs/{sample}/Contig{nr}.fasta".format(sample=sample, nr=nr))
         blat_variables.append("results/A06_identified_contigs_blat/{sample}/contig{nr}_AT.psl".format(sample=sample, nr=nr))
-        extract_hits_psl.append("results/A07_mapped_exons/{sample}/".format(sample=sample, nr=nr))
 
 rule all:
     input:
@@ -28,8 +26,7 @@ rule all:
         # fpileup,
         var_variables,
         make_contig_consensus,
-        blat_variables,
-        extract_hits_psl
+        blat_variables
 
 rule convert_to_fBAM:
     input:
@@ -93,16 +90,5 @@ rule BLAT_assembled:
         "-minScore=0 "
         "-minIdentity=0 "
         "{input} {output}"
-
-rule extract_hits_psl:
-    input:
-        script = "src/extract_hits_psl.py"
-        # file = "results/A06_identified_contigs_blat/{sample}/contig{nr}_AT.psl"
-    output:
-        "results/A07_mapped_exons/{sample}/"
-    params:
-        "{sample}"
-    shell:
-        "python {input.script} {params}"
 
 
