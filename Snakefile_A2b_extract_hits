@@ -1,10 +1,13 @@
 # variables for every species
-SAMPLES = "test1 test2".split()
+SAMPLES = "SRR8528376".split()
 
 extract_hits_psl = []
 for sample in SAMPLES:
     extract_hits_psl.append("results/A07_mapped_exons/{sample}/stats/sequenced_exons.txt".format(sample=sample))
 
+rule all:
+    input:
+        extract_hits_psl
 
 rule extract_hits_psl:
     input:

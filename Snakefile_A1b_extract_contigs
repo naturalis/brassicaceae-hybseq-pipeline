@@ -1,0 +1,18 @@
+SAMPLES = "S0156 S0271 S0275 S0277".split()
+
+extract_contigs = expand("results/A04_mapped_contigs/{sample}/sam/number_of_reads_and_contigs.txt", sample = SAMPLES)
+
+rule all:
+    input:
+        extract_contigs
+
+#create per contig new SAM files with headers from created SAM file after YASRA
+rule extract_contigs:
+    input:
+        "src/extract_contigs_YASRA.py"
+    output:
+        "results/A04_mapped_contigs/{sample}/sam/number_of_reads_and_contigs.txt"
+    params:
+        "{sample}"
+    shell:
+        "python3 {input} {params}"

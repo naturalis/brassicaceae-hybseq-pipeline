@@ -1,5 +1,5 @@
 # variables for every species
-SAMPLES = "S0301 S0377".split()
+SAMPLES = "SRR8528376".split()
 
 configfile: "./envs/config_contigs.yaml"
 

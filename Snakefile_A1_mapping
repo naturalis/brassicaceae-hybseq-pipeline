@@ -1,4 +1,4 @@
-SAMPLES = "S0301 S0377".split()
+SAMPLES = "S0156 S0271 S0275 S0277".split()
 FRPU = ["forward_trim_paired", "forward_trim_unpaired", "reverse_trim_paired", "reverse_trim_unpaired"]
 
 raw_reads_samples = expand("data/raw_reads/{sample}_count_reads.txt", sample = SAMPLES)
@@ -7,17 +7,15 @@ dedupl_var = expand("results/A02_deduplicated_reads/{sample}/{sample}_{frpu}_ded
 count_dedupl_reads = expand("results/A02_deduplicated_reads/{sample}/{sample}_count_reads.txt", sample = SAMPLES)
 combine = expand("results/A02_deduplicated_reads/{sample}/{sample}_reads.fq", sample = SAMPLES)
 alignreads = expand("{sample}/", sample = SAMPLES)
-extract_contigs = expand("results/A04_mapped_contigs/{sample}/sam", sample = SAMPLES)
 
 rule all:
     input:
-        raw_reads_samples
-        #count_trimmed_reads,
-        #dedupl_var,
-        #combine,
-        #count_dedupl_reads,
-        #alignreads,
-        #extract_contigs
+        raw_reads_samples,
+        count_trimmed_reads,
+        dedupl_var,
+        combine,
+        count_dedupl_reads,
+        alignreads
 
 rule count_raw_reads:
     input:
@@ -80,30 +78,22 @@ rule count_deduplicated_reads:
 
 # reference mapping and de novo using YASRA/alignreads.py
 # make sure to: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads"
+# for high-mem: "alignreads" as shell command
+# for laptop: "python src/installed_alignreads/alignreads/alignreads.py "
 rule alignreads:
     input:
-        "results/A02_deduplicated_reads/{sample}/{sample}_reads.fq",
-        "data/reference_genomes/ref-at.fasta"
+        reads = "results/A02_deduplicated_reads/{sample}/{sample}_reads.fq",
+        reference = "data/reference_genomes/ref-at.fasta"
     output:
         "{sample}/"
     shell:
-        "python src/installed_alignreads/alignreads/alignreads.py "
-        "{input} "
+         # "python src/installed_alignreads/alignreads/alignreads.py"
+        "alignreads "
+        "{input.reads} {input.reference} "
         "--single-step "
         "--read-type solexa "
         "--read-orientation linear "
         "--percent-identity medium "
         "--depth-position-masking 5- "
         "--proportion-base-filter 0.7- "
-        "--output-directory {output}"
 
-# create per contig new SAM files with headers from created SAM file after YASRA
-rule extract_contigs:
-    input:
-        "src/extract_contigs_YASRA.py"
-    output:
-        "results/A04_mapped_contigs/{sample}/sam"
-    params:
-        "{sample}"
-    shell:
-        "python3 {input} {params}"

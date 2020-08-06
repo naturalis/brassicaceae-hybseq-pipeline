@@ -1,5 +1,5 @@
 configfile: "./envs/config_exons.yaml"
-SAMPLES = "SRR8528371 SRR8528366".split()
+SAMPLES = "S0301 S0377".split()
 
 # variables for rule all:
 mafft_variables = []
