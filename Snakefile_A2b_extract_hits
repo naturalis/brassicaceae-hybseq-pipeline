@@ -1,13 +1,26 @@
 # variables for every species
-SAMPLES = "SRR8528376".split()
+SAMPLES = "SRR8528339 SRR8528340 SRR8528341 SRR8528342 SRR8528343 SRR8528344 SRR8528345 SRR8528346 SRR8528347 SRR8528348 SRR8528349 SRR8528350".split()
 
+calculate_avcov = []
 extract_hits_psl = []
 for sample in SAMPLES:
+    calculate_avcov.append("results/A04_mapped_contigs/{sample}/var/{sample}_average_coverage.txt".format(sample=sample))
     extract_hits_psl.append("results/A07_mapped_exons/{sample}/stats/sequenced_exons.txt".format(sample=sample))
 
 rule all:
     input:
+        calculate_avcov,
         extract_hits_psl
+
+rule calculate_avcov:
+    input:
+        script = "src/calculate_average_coverage.py"
+    output:
+        "results/A04_mapped_contigs/{sample}/var/{sample}_average_coverage.txt"
+    params:
+        sample = "{sample}"
+    shell:
+        "python {input.script} {params.sample}"
 
 rule extract_hits_psl:
     input:
@@ -16,7 +29,7 @@ rule extract_hits_psl:
     output:
         "results/A07_mapped_exons/{sample}/stats/sequenced_exons.txt"
     params:
-        sample="{sample}"
+        sample = "{sample}"
     shell:
         "python {input.script} {params.sample}"
 
