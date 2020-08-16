@@ -49,7 +49,7 @@ sum_coverage = 0
 for contig in coverage_list:
     sum_coverage += contig
 avcov = sum_coverage / ncontigs
-print("The average coverage of " + SAMPLE + " is " + str(round(avcov)))
+print("The average coverage of " + SAMPLE + " is " + str(round(avcov)) + "\n")
 
 path_to_favcov = path_to_mapped_contigs_var_dir + SAMPLE + "_average_coverage.txt"
 favcov = open(path_to_favcov, "w+")
