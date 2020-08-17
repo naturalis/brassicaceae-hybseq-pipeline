@@ -96,34 +96,7 @@ for record in SeqIO.parse(path_to_fexon, "fasta"):
     # record.id starting with AT is the ref seq in ORF
     if record.id.startswith("AT"):
         ref_start, ref_end = find_ref_start_end(record, ref_start, ref_end)
-    else:
-        trimmed_alignment = ""
-        trimmed_alignment = get_trimmed_alignment(trimmed_alignment, record)
-        append_trimmed_alignments(path_to_ftrimmed_exon, record, trimmed_alignment)
 
-# # create .yaml for macse
-# path_to_yaml = "./envs/macse.yaml"
-# create_YAML(path_to_yaml)
-#
-# list_trimmed_exon_ffasta = os.listdir(path_to_trimmed_dir)
-# sorted_list_trimmed_ffasta = natural_sort(list_trimmed_exon_ffasta)
-# for trimmed_ffasta in sorted_list_alignments:
-#     exon_name, fasta = trimmed_ffasta.split(".fasta")
-#     macse_NT_output = "results/A13_prot_alignments/" + exon_name + "_NT.fasta"
-#
-#     fYAML = open(path_to_yaml, "a+")
-#     fYAML.write("    " + exon_name + ": " + macse_NT_output + "\n")
-#     fYAML.close()
-#
-# fYAML = open(path_to_yaml, "a+")
-# fYAML.write("exons_AA:\n")
-# fYAML.close()
-#
-# for trimmed_ffasta in sorted_list_alignments:
-#     exon_name, fasta = trimmed_ffasta.split(".fasta")
-#     macse_AA_output = "results/A13_prot_alignments/" + exon_name + "_AA.fasta"
-#
-#     fYAML = open(path_to_yaml, "a+")
-#     fYAML.write("    " + exon_name + ": " + macse_AA_output + "\n")
-#     fYAML.close()
-#
+    trimmed_alignment = ""
+    trimmed_alignment = get_trimmed_alignment(trimmed_alignment, record)
+    append_trimmed_alignments(path_to_ftrimmed_exon, record, trimmed_alignment)
