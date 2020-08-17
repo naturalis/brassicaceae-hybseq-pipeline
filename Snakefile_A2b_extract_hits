@@ -3,13 +3,11 @@ SAMPLES = "SRR8528351 SRR8528354 SRR8528362 SRR8528365 SRR8528368 SRR8528371 SRR
 
 calculate_avcov = []
 extract_hits_psl = []
-calc_id_contigs = []
 calc_mapped_reads = []
 calc_contigs_formed = []
 for sample in SAMPLES:
     calculate_avcov.append("results/A04_mapped_contigs/{sample}/var/{sample}_average_coverage.txt".format(sample=sample))
     extract_hits_psl.append("results/A07_mapped_exons/{sample}/stats/sequenced_exons.txt".format(sample=sample))
-    calc_id_contigs.append("results/A06_identified_contigs_blat/{sample}/stats/identified_contigs.txt".format(sample=sample))
     calc_mapped_reads.append("results/A03_mapped_reads/{sample}/mapped_reads.txt".format(sample=sample))
     calc_contigs_formed.append("results/A03_mapped_reads/{sample}/contigs_formed.txt".format(sample=sample))
 
@@ -17,8 +15,7 @@ for sample in SAMPLES:
 rule all:
     input:
         calculate_avcov,
-        #extract_hits_psl,
-        calc_id_contigs,
+        extract_hits_psl,
         calc_mapped_reads,
         calc_contigs_formed
 
@@ -42,14 +39,6 @@ rule extract_hits_psl:
         sample = "{sample}"
     shell:
         "python {input.script} {params.sample}"
-
-rule calc_identified_contigs:
-    input:
-         file = "results/A06_identified_contigs_blat/{sample}/stats/highest_hits_filtered.txt"
-    output:
-         file = "results/A06_identified_contigs_blat/{sample}/stats/identified_contigs.txt"
-    shell:
-        "echo $(cat {input.file} | wc -l) - 1 | bc > {output.file}"
 
 rule calculate_mapped_reads:
     input:
