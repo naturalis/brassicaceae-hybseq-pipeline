@@ -8,6 +8,7 @@
 
 import os
 import re
+import fnmatch
 from Bio import SeqIO
 
 
@@ -53,13 +54,10 @@ def create_YAML(path):
 
 
 # Code starts here
-path_to_orf_ref = "./data/exons/ref-at_orf.fasta"
-
 # list to loop over the samples
 path_to_consensus_dir = "./results/A09_consensus_exons/"
 list_consensus_dir = os.listdir(path_to_consensus_dir)
 sorted_consensus_dir = natural_sort(list_consensus_dir)
-
 
 # creates new dir for output and list to check if file already exists
 path_to_all_samples_exons_dir = "./results/A10_all_samples_exons/"
@@ -67,6 +65,7 @@ create_dir(path_to_all_samples_exons_dir)
 list_exons_dir = os.listdir(path_to_all_samples_exons_dir)
 sorted_exons_dir = natural_sort(list_exons_dir)
 
+path_to_orf_ref = "./data/exons/ref-at_orf.fasta"
 create_fexon(path_to_orf_ref)
 
 # loops over samples in consensus dir
@@ -75,11 +74,15 @@ for sample in sorted_consensus_dir:
     list_consensus_sample_dir = os.listdir(path_to_consensus_sample_dir)
     sorted_consensus_sample_dir = natural_sort(list_consensus_sample_dir)
 
-    for fexon in sorted_consensus_sample_dir:
-        path_to_fexon_consensus = path_to_consensus_sample_dir + fexon
-        path_to_fexon = path_to_all_samples_exons_dir + fexon
+    pattern = "*.fasta"
+    for file in sorted_consensus_sample_dir:
+        if fnmatch.fnmatch(file, pattern):
+            fexon = file
 
-        append_seq(path_to_fexon, path_to_fexon_consensus)
+            path_to_fexon_consensus = path_to_consensus_sample_dir + fexon
+            path_to_fexon = path_to_all_samples_exons_dir + fexon
+
+            append_seq(path_to_fexon, path_to_fexon_consensus)
 
 # Creates configuration YAML file for MAFFT in envs exons dir
 path_to_fYAML = "./envs/all_exons.yaml"
@@ -91,3 +94,4 @@ for fexon in sorted_exons_dir:
     exon_name = exon_name.strip()
     fYAML.write("    - " + exon_name + "\n")
 fYAML.close()
+

@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # This script is to read lines in var file after the VARscan step and to make a consensus sequence
-# It loops through every contig in every SAMPLE_NAME file and stores the sequence, number of SNPs and avcov of
-# every contig
-# It is used by giving the script the sample name as input argument, for example: $ python read_var.py SRR8528336
+# It stores the sequence, number of SNPs and average coverage for every .var file
+# It is used by giving the script the .var file as input argument, for example:
+# $ python read_var.py results/A04_mapped_contigs/{sample}/var/Contig{nr}_AT_sort.var
 # Made by: Elfy Ly
 # Date: 28 May 2020
 
@@ -44,7 +44,8 @@ def create_file_empty(path_to_consensus_species_dir):
 # parse var file information for every line and calculates and stores seq, nSNPs and avcov
 def calculate_var_stats(seq):
     nsnps = 0
-    # avcov = 0
+    #avcov = 0
+    #nnon_snp = 0
     with open(INPUT_FILE, 'rt') as myfile:
         for myline in myfile:
             if not myline.startswith('Chrom'):
@@ -53,10 +54,11 @@ def calculate_var_stats(seq):
 
                 if cons != 'N':
                     seq += cons
+                    #avcov += int(reads2)
+                    #nnon_snp += 1
                 elif cons == 'N':
                     nsnps += 1
-
-        return seq
+    return seq
 
 
 # Creates new txt file for consensus sequence
