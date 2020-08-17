@@ -1,19 +1,25 @@
 configfile: "./envs/config_exons.yaml"
-SAMPLES = "S0301 S0377".split()
+SAMPLES = "S0377".split()
 
 # variables for rule all:
 mafft_variables = []
 make_exon_consensus = []
+calc_called_exons = []
 for sample in SAMPLES:
     exons = config[sample]
-    for exon in exons:
-        mafft_variables.append("results/A08_aligned_exons/{sample}/{exon}.fasta".format(sample=sample, exon=exon))
-        make_exon_consensus.append("results/A09_consensus_exons/{sample}/{exon}.fasta".format(sample=sample, exon=exon))
+    if not exons:
+        print("not a single exon has been identified in: " + sample)
+    elif exons:
+        for exon in exons:
+            mafft_variables.append("results/A08_aligned_exons/{sample}/{exon}.fasta".format(sample=sample, exon=exon))
+            make_exon_consensus.append("results/A09_consensus_exons/{sample}/{exon}.fasta".format(sample=sample, exon=exon))
+            calc_called_exons.append("results/A09_consensus_exons/{sample}/called_exons.txt".format(sample=sample))
 
 rule all:
     input:
         mafft_variables,
-        make_exon_consensus
+        make_exon_consensus,
+        calc_called_exons
 
 rule MAFFT_assembly:
     input:
@@ -37,6 +43,15 @@ rule make_exon_consensus:
     shell:
         "python {input.script} {params}"
 
+rule calculate_called_exons:
+    input:
+        dir = "results/A09_consensus_exons/{sample}/"
+    output:
+        file = "results/A09_consensus_exons/{sample}/called_exons.txt"
+    shell:
+        "echo $(ls {input.dir} | wc -l) - 1 | bc > {output.file}"
+
+'''
 rule merge_exon_seqs:
     input:
         script = "src/merge_exon_seqs.py",
@@ -45,3 +60,4 @@ rule merge_exon_seqs:
         "results/A10_all_samples_exons/"
     shell:
          "python {input.script}"
+'''

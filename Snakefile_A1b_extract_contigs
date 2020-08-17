@@ -1,10 +1,14 @@
-SAMPLES = "S0156 S0271 S0275 S0277".split()
+SAMPLES = "SRR8528399".split()
 
 extract_contigs = expand("results/A04_mapped_contigs/{sample}/sam/number_of_reads_and_contigs.txt", sample = SAMPLES)
+calc_mapped_reads = expand("results/A03_mapped_reads/{sample}/mapped_reads.txt", sample = SAMPLES)
+calc_contigs_formed = expand("results/A03_mapped_reads/{sample}/contigs_formed.txt", sample = SAMPLES)
 
 rule all:
     input:
-        extract_contigs
+        extract_contigs,
+        calc_mapped_reads,
+        calc_contigs_formed
 
 #create per contig new SAM files with headers from created SAM file after YASRA
 rule extract_contigs:
@@ -16,3 +20,20 @@ rule extract_contigs:
         "{sample}"
     shell:
         "python3 {input} {params}"
+
+rule calculate_mapped_reads:
+    input:
+         file = "results/A03_mapped_reads/{sample}/YASRA_related_files/alignments_{sample}_reads.fq_ref-at.fasta.sam "
+    output:
+         file = "results/A03_mapped_reads/{sample}/mapped_reads.txt"
+    shell:
+        "cat {input.file} | grep '>' | wc -l > {output.file}"
+
+rule calculate_contigs_formed:
+    input:
+         file = "results/A03_mapped_reads/{sample}/YASRA_related_files/Final_Assembly_S0322_reads.fq_ref-at.fasta"
+    output:
+         file = "results/A03_mapped_reads/{sample}/contigs_formed.txt"
+    shell:
+         "cat {input.file} | grep '>' | wc -l > {output.file}"
+
