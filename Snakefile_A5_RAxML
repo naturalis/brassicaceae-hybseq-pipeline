@@ -1,0 +1,10 @@
+configfile: "./envs/S1L1M1R.yaml"
+
+rule phyutilities:
+    input:
+        expand("results/A14_trimmed_prot/{exon}_NT.fasta", exon=config["exons"])
+    output:
+        "results/A15_S1L1M1R_RAxML/concatenated.aln"
+    shell:
+        "java -jar src/phyutility/phyutility.jar "
+        "-concat -in {input} -out {output}"
