@@ -1,0 +1,56 @@
+
+configfile: "envs/sequenced_genomes.yaml"
+
+blat = expand("results/B01_identified_contigs_blat/{genome}/{exon_nr}_AT.psl",
+              genome = config["genomes"], exon_nr = config["exons"])
+extract_psl = expand("results/B01_identified_contigs_blat/{genome}/stats", genome = config["genomes"])
+
+rule all:
+    input:
+        blat,
+        extract_psl
+
+rule fatotwobit:
+    input:
+        "data/sequenced_genomes/{genome}.fna"
+    output:
+        "data/sequenced_genomes/{genome}.2bit"
+    shell:
+        "faToTwoBit {input} {output}"
+
+rule BLAT:
+    input:
+        "data/sequenced_genomes/{genome}.2bit",
+        "data/exons/{exon_nr}_AT.fasta"
+    output:
+        "results/B01_identified_contigs_blat/{genome}/{exon_nr}_AT.psl"
+    shell:
+        "blat "
+        "-t=dnax "
+        "-q=dnax "
+        "-stepSize=5 "
+        "-repMatch=2253 "
+        "-minScore=0 "
+        "-minIdentity=0 "
+        "{input} {output}"
+
+rule extract_psl:
+    input:
+         "src/extract_hits_psl_seq_genomes.py",
+    output:
+         "results/B01_identified_contigs_blat/{genome}/stats"
+    params:
+         "{genome}"
+    shell:
+         "python {input} {params}"
+
+rule extract_exon:
+    input:
+         "data/sequenced_genomes/{genome}.2bit"
+    output:
+         "results/B02_extracted_exons/exon.fa"
+    shell:
+         "twoBitToFa "
+         "-seq=x -start=x -end=x {input} {output}"
+
+
