@@ -23,16 +23,16 @@ For example: SRR8528336 in BioProject PRJNA518905 from https://www.ebi.ac.uk/ena
 `$ cd raw_reads`
 4) Get the .fastq.gz files for the forward (1) and reverse (2) paired end reads by copying the link adress of FASTQ files (FTP). 
 Download the files by running the command:
-`$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR852/006/SRR8528336/SRR8528336_1.fastq.gz`
-`$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR852/006/SRR8528336/SRR8528336_2.fastq.gz` 
+- `$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR852/006/SRR8528336/SRR8528336_1.fastq.gz`
+- `$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR852/006/SRR8528336/SRR8528336_2.fastq.gz` 
 5) Unpack these files by:
-`$ gunzip SRR8528336_1.fastq.gz` 
-`$ gunzip SRR8528336_2.fastq.gz`
+- `$ gunzip SRR8528336_1.fastq.gz` 
+- `$ gunzip SRR8528336_2.fastq.gz`
 6) Go back to the main folder
 `$ cd ~/brassicaceae-hybseq-pipeline/`
 
 ## Get sequenced genome
-(Only necessary if pipeline for sequenced genomes is finished - currently work in progress)
+(Only necessary if pipeline for sequenced genomes is finished - currently work in progress).
 Download the sequence genome Arabidopsis lyrata subsp. lyrata (GCA_000004255.1) from:
 https://www.ncbi.nlm.nih.gov/assembly/GCF_000004255.2
 1) By creating a new path:
@@ -60,7 +60,11 @@ Create the environment by running the following command in the main folder:
 `$ conda activate brassicaceae-hybseq-pipeline`
 
 ## Download alignreads.py
-(in Naturalis high-mem, alignreads.py is installed in /usr/local/src/alignreads)
+In Naturalis high-mem:
+1) alignreads.py is installed in /usr/local/src/alignreads
+2) To only use 'alignreads' instead of calling the python file (necessary for the execution of Snakemake), run the command:
+- `$ export PATH="$PATH:~/usr/local/src/alignreads/alignreads`
+
 1) Go to the ./src folder
 2) Install alignreads folder directory by running: 
 `$ git clone https://github.com/zachary-foster/alignreads`
@@ -71,10 +75,9 @@ Create the environment by running the following command in the main folder:
 (1) YASRA-2.33.tar.gz
 (1) mummer 3.23
 5) Go back to the main folder
-6) To only use 'alignreads' instead of calling the python file, run the command:
+6) To only use 'alignreads' instead of calling the python file (necessary for the execution of Snakemake), run the command:
 `$ export PATH="$PATH:./src/installed_alignreads/alignreads"`
-This is necessary for the use of Snakemake
-(at this moment: $ export PATH="$PATH:~/usr/local/src/alignreads/alignreads)
+
 
 
 ## Run snakemake
@@ -94,7 +97,7 @@ For example: ORIGIN = "naturalis" to ORIGIN = "donovan"
 - `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part6`
 - `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F merge_exon_seqs`
 - `$ snakemake --snakefile Snakefile_A4_MSA -F all`
-- `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F phyutilities`
+- `$ snakemake --snakefile Snakefile_A5_RAxML -F phyutilities`
 
 
 
