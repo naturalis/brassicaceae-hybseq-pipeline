@@ -43,6 +43,8 @@ Download the files by running the command:
 `$ cd data/raw_reads`
 2) Download the .fastq.gz files in the path: brassicaceae-hybseq-pipeline/data/raw_reads/
 3) Make sure the name of the files look like: SAMPLECODE_1.fastq.gz and SAMPLECODE_2.fastq.gz.
+- If sequenced samples are sequenced by Naturalis, change_raw_reads_name.py can be ran to change all names at once:
+- `$ python change_raw_reads_name.py`
 4) Unpack these files one by one by:
 - `$ gunzip [SAMPLECODE]_1.fastq.gz` 
 - `$ gunzip [SAMPLECODE]_2.fastq.gz`
