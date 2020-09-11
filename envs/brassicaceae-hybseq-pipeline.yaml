@@ -19,7 +19,3 @@ dependencies:
   - macse =1.2
   - ucsc-fatotwobit =377
   - ucsc-twobittofa =377
-  # astral II
-  # trespex
-  # treecmp
-  #- consel =1.20  # doet niet
