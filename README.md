@@ -14,6 +14,13 @@ For Windows 10:
  - bash commands can be written in Anaconda prompt (miniconda3) or another program such as Ubuntu. 
 
 ---
+## Create and activate environment
+This conda environment contains all tools and versions necessary for the execution of this pipeline
+1) Install and download the necessary software packages for this project written in brassicaceae-hybseq-pipeline.yaml. 
+Create the environment by running the following command in the main folder:
+- `$ conda env create -f ./envs/brassicaceae-hybseq-pipeline.yaml`
+2) Activate this environment by:
+- `$ conda activate brassicaceae-hybseq-pipeline`
 
 ## Get raw reads 
 1) Go to the data dir by:
@@ -42,13 +49,6 @@ Download the files by running the command:
 - `$ gunzip [SAMPLECODE]_1.fastq.gz` 
 - `$ gunzip [SAMPLECODE]_2.fastq.gz`
 7) Go back to the main folder by: `$ cd ~/brassicaceae-hybseq-pipeline/`
-
-## Create and activate environment
-1) Install and download the necessary software packages for this project written in brassicaceae-hybseq-pipeline.yaml. 
-Create the environment by running the following command in the main folder:
-- `$ conda env create -f ./envs/brassicaceae-hybseq-pipeline.yaml`
-2) Activate this environment by:
-- `$ conda activate brassicaceae-hybseq-pipeline`
 
 ## Download alignreads.py
 ##### In Naturalis high-mem:
