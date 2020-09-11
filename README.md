@@ -1,6 +1,9 @@
 # brassicaceae-hybseq-pipeline
 This is obtained by running the command:
-$ git clone https://github.com/naturalis/brassicaceae-hybseq-pipeline.git
+`$ git clone https://github.com/naturalis/brassicaceae-hybseq-pipeline.git`
+
+Go to this directory by running the command:
+`$ cd brassicaceae-hybseq-pipeline`
 
 This bioinformatics pipeline is used for the phylogenetic reconstruction of Brassicaceae using hybrid sequencing data.
 
@@ -12,15 +15,17 @@ For Windows 10:
 
 ---
 
-## Get raw reads
-Download the 2 FastQ (FTP) (fastq.gz) files of the samples you like from https://www.ebi.ac.uk/ena/browse.
-For example: SRR8528336 in BioProject PRJNA518905 from https://www.ebi.ac.uk/ena/data/view/SRR8528336 by:
+## Get raw reads 
 1) Go to the data dir by:
 `$ cd data/`
 2) Create the raw_reads directories by:
 `$ mkdir raw_reads`
 3) Go to this path by:
 `$ cd raw_reads`
+
+- From BioProject:
+Download the 2 FastQ (FTP) (fastq.gz) files of the samples you like from https://www.ebi.ac.uk/ena/browse.
+For example: SRR8528336 in BioProject PRJNA518905 from https://www.ebi.ac.uk/ena/data/view/SRR8528336 by:
 4) Get the .fastq.gz files for the forward (1) and reverse (2) paired end reads by copying the link adress of FASTQ files (FTP). 
 Download the files by running the command:
 - `$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR852/006/SRR8528336/SRR8528336_1.fastq.gz`
@@ -29,6 +34,14 @@ Download the files by running the command:
 - `$ gunzip SRR8528336_1.fastq.gz` 
 - `$ gunzip SRR8528336_2.fastq.gz`
 6) Go back to the main folder by: `$ cd ~/brassicaceae-hybseq-pipeline/`
+
+- From elsewhere:
+4) Download the .fastq.gz files in the path: brassicaceae-hybseq-pipeline/data/raw_reads/
+5) Make sure the name of the files look like: SAMPLECODE_1.fastq.gz and SAMPLECODE_2.fastq.gz
+6) Unpack these files by:
+- `$ gunzip [SAMPLECODE]_1.fastq.gz` 
+- `$ gunzip [SAMPLECODE]_2.fastq.gz`
+7) Go back to the main folder by: `$ cd ~/brassicaceae-hybseq-pipeline/`
 
 ## Create and activate environment
 1) Install and download the necessary software packages for this project written in brassicaceae-hybseq-pipeline.yaml. 
