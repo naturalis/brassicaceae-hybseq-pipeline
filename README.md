@@ -30,27 +30,6 @@ Download the files by running the command:
 - `$ gunzip SRR8528336_2.fastq.gz`
 6) Go back to the main folder by: `$ cd ~/brassicaceae-hybseq-pipeline/`
 
-## Get sequenced genome
-(Only necessary if pipeline for sequenced genomes is finished - currently work in progress).
-Download the sequence genome Arabidopsis lyrata subsp. lyrata (GCA_000004255.1) from:
-https://www.ncbi.nlm.nih.gov/assembly/GCF_000004255.2
-1) By creating a new path:
-`$ data/sequence_genomes`
-2) Go to this path:
-`$ cd data/sequence_genomes/download`
-3) Download list of all GenBank files:
-- `$ wget ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_genbank.txt`
-4) Get the download link of the correct genome and save this in ftp_folder.txt by:
-- `$ grep -E 'GCF_000004255.2' assembly_summary_genbank.txt | cut -f 20 > ftp_folder.txt`
-5) Create folder and script to save the links:
-- `awk 'BEGIN{FS=OFS="/";filesuffix="genomic.fna.gz"}{ftpdir=$0;asm=$10;file=asm"_"filesuffix;print "wget "ftpdir,file}' ftp_folder.txt > download_fna_files.sh`
-6) Download the sequence genome by:
-`$ source download_fna_files.sh`
-7) Unpack the .gz file by: (is not necessary)
-`$ gunzip GCA_000004255.1_v.1.0_genomic.fna.gz`
-8) Change the .fna file to arl_ref.fa file and move this file back to the sequence_genomes directory by:
-- `$ mv GCA_000004255.1_v.1.0_genomic.fna ../arl_ref.fa`
-
 ## Create and activate environment
 1) Install and download the necessary software packages for this project written in brassicaceae-hybseq-pipeline.yaml. 
 Create the environment by running the following command in the main folder:
@@ -78,8 +57,6 @@ If alignreads.py has not been installed yet:
 6) To only use 'alignreads' instead of calling the python file (necessary for the execution of Snakemake), run the command:
 - `$ export PATH="$PATH:./src/installed_alignreads/alignreads"`
 
-
-
 ## Run snakemake
 1) Open the snakefile by running:
 - `$ nano Snakefile_brassicaceae-hybseq-pipeline`
@@ -100,4 +77,24 @@ For example: ORIGIN = "naturalis" to ORIGIN = "donovan"
 - `$ snakemake --snakefile Snakefile_A5_RAxML -F phyutilities`
 
 
+## Get sequenced genome
+(Only necessary if pipeline for sequenced genomes is finished - currently work in progress).
+Download the sequence genome Arabidopsis lyrata subsp. lyrata (GCA_000004255.1) from:
+https://www.ncbi.nlm.nih.gov/assembly/GCF_000004255.2
+1) By creating a new path:
+`$ data/sequence_genomes`
+2) Go to this path:
+`$ cd data/sequence_genomes/download`
+3) Download list of all GenBank files:
+- `$ wget ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_genbank.txt`
+4) Get the download link of the correct genome and save this in ftp_folder.txt by:
+- `$ grep -E 'GCF_000004255.2' assembly_summary_genbank.txt | cut -f 20 > ftp_folder.txt`
+5) Create folder and script to save the links:
+- `awk 'BEGIN{FS=OFS="/";filesuffix="genomic.fna.gz"}{ftpdir=$0;asm=$10;file=asm"_"filesuffix;print "wget "ftpdir,file}' ftp_folder.txt > download_fna_files.sh`
+6) Download the sequence genome by:
+`$ source download_fna_files.sh`
+7) Unpack the .gz file by: (is not necessary)
+`$ gunzip GCA_000004255.1_v.1.0_genomic.fna.gz`
+8) Change the .fna file to arl_ref.fa file and move this file back to the sequence_genomes directory by:
+- `$ mv GCA_000004255.1_v.1.0_genomic.fna ../arl_ref.fa`
 
