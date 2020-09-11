@@ -1,8 +1,0 @@
-
-rule create_envs:
-    input:
-        "src/create_environments.py"
-    output:
-        "envs/sequenced_genomes.yaml"
-    shell:
-        "python {input}"

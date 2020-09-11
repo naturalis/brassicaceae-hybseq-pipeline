@@ -56,7 +56,7 @@ Or all at once:
 ##### In Naturalis high-mem:
 1) alignreads.py is installed in /usr/local/src/alignreads
 2) To only use 'alignreads' instead of calling the python file (necessary for the execution of Snakemake), run the command:
-- `$ export PATH="$PATH:~/usr/local/src/alignreads/alignreads`
+- `$ export PATH="$PATH:~/usr/local/src/alignreads/alignreads"`
 
 ##### If alignreads.py has not been installed yet:
 1) Go to the ./src folder
