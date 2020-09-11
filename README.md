@@ -32,6 +32,7 @@ Download the files by running the command:
 `$ cd ~/brassicaceae-hybseq-pipeline/`
 
 ## Get sequenced genome
+(Only necessary if pipeline for sequenced genomes is finished - currently work in progress)
 Download the sequence genome Arabidopsis lyrata subsp. lyrata (GCA_000004255.1) from:
 https://www.ncbi.nlm.nih.gov/assembly/GCF_000004255.2
 1) By creating a new path:
@@ -59,7 +60,7 @@ Create the environment by running the following command in the main folder:
 `$ conda activate brassicaceae-hybseq-pipeline`
 
 ## Download alignreads.py
-(alignreads.py is currently installed in /usr/local/src/alignreads)
+(in Naturalis high-mem, alignreads.py is installed in /usr/local/src/alignreads)
 1) Go to the ./src folder
 2) Install alignreads folder directory by running: 
 `$ git clone https://github.com/zachary-foster/alignreads`
@@ -77,7 +78,21 @@ This is necessary for the use of Snakemake
 
 
 ## Run snakemake
-1) In the main folder where the Snakefile is, run the Snakefile with the command:
-`$ snakemake`
-
+1) Open the snakefile by running:
+`$ nano Snakefile_brassicaceae-hybseq-pipeline`
+2) Adjust the file for the samples of interest (can be one or multiple) by changing the sample names of 'SAMPLES'.
+For example: SAMPLES = "S0603 S0560".split() to SAMPLES = "SAMPLES = "SRR8528336".split()
+3) Adjust the ORIGIN variable to "naturalis", "donovan" or "nikolov".
+For example: ORIGIN = "naturalis" to ORIGIN = "donovan"
+(This is for the count of raw reads in their FASTQ file. Counting the number of raw reads is based on the sequence identifier which differs per sequencer: Naturalis @A00, Nikolov @SRR and donovan @M01)
+4) In the main folder where the Snakefile is, run the Snakefile with the command:
+`$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part1`
+`$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part2`
+`$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part3`
+`$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part4`
+`$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part5`
+`$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part6`
+`$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F merge_exon_seqs`
+`$ snakemake --snakefile Snakefile_A4_MSA -F all`
+`$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F phyutilities`
 
