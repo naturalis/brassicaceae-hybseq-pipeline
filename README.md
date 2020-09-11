@@ -23,7 +23,7 @@ For Windows 10:
 3) Go to this path by:
 `$ cd raw_reads`
 
-- From BioProject:
+##### From BioProject:
 Download the 2 FastQ (FTP) (fastq.gz) files of the samples you like from https://www.ebi.ac.uk/ena/browse.
 For example: SRR8528336 in BioProject PRJNA518905 from https://www.ebi.ac.uk/ena/data/view/SRR8528336 by:
 4) Get the .fastq.gz files for the forward (1) and reverse (2) paired end reads by copying the link adress of FASTQ files (FTP). 
@@ -35,7 +35,7 @@ Download the files by running the command:
 - `$ gunzip SRR8528336_2.fastq.gz`
 6) Go back to the main folder by: `$ cd ~/brassicaceae-hybseq-pipeline/`
 
-- From elsewhere:
+##### From elsewhere:
 4) Download the .fastq.gz files in the path: brassicaceae-hybseq-pipeline/data/raw_reads/
 5) Make sure the name of the files look like: SAMPLECODE_1.fastq.gz and SAMPLECODE_2.fastq.gz
 6) Unpack these files by:
@@ -51,12 +51,12 @@ Create the environment by running the following command in the main folder:
 - `$ conda activate brassicaceae-hybseq-pipeline`
 
 ## Download alignreads.py
-In Naturalis high-mem:
+##### In Naturalis high-mem:
 1) alignreads.py is installed in /usr/local/src/alignreads
 2) To only use 'alignreads' instead of calling the python file (necessary for the execution of Snakemake), run the command:
 - `$ export PATH="$PATH:~/usr/local/src/alignreads/alignreads`
 
-If alignreads.py has not been installed yet:
+##### If alignreads.py has not been installed yet:
 1) Go to the ./src folder
 2) Install alignreads folder directory by running: 
 - `$ git clone https://github.com/zachary-foster/alignreads`
