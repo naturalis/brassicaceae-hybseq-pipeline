@@ -91,7 +91,7 @@ rule make_contig_consensus:
     output:
         "results/A05_consensus_contigs/{sample}/Contig{nr}.fasta"
     shell:
-        "python3 {input.script} {input.file}"
+        "python {input.script} {input.file}"
 
 rule BLAT_assembled:
     input:

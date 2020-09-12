@@ -125,5 +125,5 @@ rule extract_contigs:
     params:
         "{sample}"
     shell:
-        "python3 {input} {params}"
+        "python {input} {params}"
 

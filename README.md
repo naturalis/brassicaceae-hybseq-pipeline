@@ -81,13 +81,13 @@ For example: SAMPLES = "S0603 S0560".split() to SAMPLES = "SAMPLES = "SRR8528336
 For example: ORIGIN = "naturalis" to ORIGIN = "donovan"
 (This is for the count of raw reads in their FASTQ file. Counting the number of raw reads is based on the sequence identifier which differs per sequencer: Naturalis @A00, Nikolov @SRR and donovan @M01)
 4) To run the pipeline, in the main folder where the Snakefile is, run the Snakefile with the commands in the order:
-- `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part1`
-- `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part2`
-- `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part3`
-- `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part4`
-- `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part5`
-- `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F part6`
-- `$ snakemake --snakefile Snakefile_brassicaceae-hybseq-pipeline -F merge_exon_seqs`
+- `$ snakemake --snakefile Snakefile_A1_Mapping -F part1`
+- `$ snakemake --snakefile Snakefile_A1_Mapping -F part2`
+- `$ snakemake --snakefile Snakefile_A2_Contigs -F part3`
+- `$ snakemake --snakefile Snakefile_A2_Contigs -F part4`
+- `$ snakemake --snakefile Snakefile_A3_Exons -F part5`
+- `$ snakemake --snakefile Snakefile_A3_Exons -F part6`
+- `$ snakemake --snakefile Snakefile_A3_Exons -F merge_exon_seqs`
 - `$ snakemake --snakefile Snakefile_A4_MSA -F all`
 - `$ snakemake --snakefile Snakefile_A5_RAxML -F phyutilities`
 
