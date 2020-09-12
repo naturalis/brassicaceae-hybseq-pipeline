@@ -59,7 +59,7 @@ rule calc_identified_contigs:
 rule make_exon_consensus:
     input:
         script = "src/make_exon_consensus.py",
-        file = "results/A08_aligned_exons/{sample}/{exon}.fasta"
+        # file = "results/A08_aligned_exons/{sample}/{exon}.fasta"
     output:
         "results/A09_consensus_exons/{sample}/{exon}.fasta"
     params:
@@ -81,7 +81,7 @@ rule merge_exon_seqs:
     input:
         script = "src/merge_exon_seqs.py",
         file = "results/A09_consensus_exons/"
-    output:
-        "results/A10_all_samples_exons/"
+    #output:
+    #    dir = "results/A10_all_samples_exons/"
     shell:
          "python {input.script}"
