@@ -1,7 +1,6 @@
 configfile: "./envs/config_contigs.yaml"
 
 SAMPLES = "S0275 S0277".split() #PJA296A PJA370-B PJA370-C
-ORIGIN = "naturalis"
 
 # variables for part 3:
 var_variables = []
