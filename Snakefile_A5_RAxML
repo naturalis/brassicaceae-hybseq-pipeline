@@ -2,7 +2,7 @@ configfile: "./envs/S1L1M1R.yaml"
 
 rule phyutilities:
     input:
-        expand("results/A14b_trimmed_prot/{exon}_NT.fasta", exon=config["exons"])
+        expand("results/A14_trimmed_prot/{exon}_NT.fasta", exon=config["exons"])
     output:
         "results/A15_S1L1M1R_RAxML/S1L1M1R_msa.aln"
     shell:

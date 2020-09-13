@@ -75,18 +75,20 @@ Or all at once:
 ## Run snakemake
 1) Open the snakefile by running:
 - `$ nano Snakefile_brassicaceae-hybseq-pipeline`
-2) Adjust the file for the samples of interest (can be one or multiple) by changing the sample names of 'SAMPLES'.
+2) Adjust in the Snakefiles (A1, A2 and A3) for the samples of interest (can be one or multiple) by changing the sample names of 'SAMPLES'.
 For example: SAMPLES = "S0603 S0560".split() to SAMPLES = "SAMPLES = "SRR8528336".split()
-3) Adjust the ORIGIN variable to "naturalis", "donovan" or "nikolov".
+3) Adjust in Snakefile_A1_Mapping the ORIGIN variable to "naturalis", "donovan" or "nikolov".
 For example: ORIGIN = "naturalis" to ORIGIN = "donovan"
 (This is for the count of raw reads in their FASTQ file. Counting the number of raw reads is based on the sequence identifier which differs per sequencer: Naturalis @A00, Nikolov @SRR and donovan @M01)
-4) To run the pipeline, in the main folder where the Snakefile is, run the Snakefile with the commands in the order:
+4) To run the parallel pipeline, in the main folder where the Snakefile is, run the Snakefile with the commands in the order:
 - `$ snakemake --snakefile Snakefile_A1_Mapping -F part1`
 - `$ snakemake --snakefile Snakefile_A1_Mapping -F part2`
 - `$ snakemake --snakefile Snakefile_A2_Contigs -F part3`
 - `$ snakemake --snakefile Snakefile_A2_Contigs -F part4`
 - `$ snakemake --snakefile Snakefile_A3_Exons -F part5`
 - `$ snakemake --snakefile Snakefile_A3_Exons -F part6`
+
+5) To run the single pipeline, make sure the path ./results/A09_consensus_exons only contains the samples of interest and that at least one sample covers all exons to make Snakefile_A4_MSA work.
 - `$ snakemake --snakefile Snakefile_A3_Exons -F merge_exon_seqs`
 - `$ snakemake --snakefile Snakefile_A4_MSA -F all`
 - `$ snakemake --snakefile Snakefile_A5_RAxML -F phyutilities`
