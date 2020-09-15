@@ -60,7 +60,7 @@ Or all at once:
 
 ##### If alignreads.py has not been installed yet:
 1) Go to the ./src folder
-2) Install alignreads folder directory by running: 
+2) Download alignreads folder directory by running: 
 - `$ git clone https://github.com/zachary-foster/alignreads`
 3) Install the software packages by running the command:
 - `$ python ./alignreads/install.py ./installed_alignreads`
@@ -68,9 +68,21 @@ Or all at once:
 (8) lastz-1.03.02.tar.gz
 (1) YASRA-2.33.tar.gz
 (1) mummer 3.23
-5) Go back to the main folder: `cd ..`
+5) Go back to the main folder: `$ cd ..`
 6) To only use 'alignreads' instead of calling the python file (necessary for the execution of Snakemake), run the command:
 - `$ export PATH="$PATH:./src/installed_alignreads/alignreads"`
+
+## Download phyutilities v2.7.1:
+For the concatenation step in Snakemake_A5_RAxML
+1) Go to the ./src folder
+2) Donwload phyutilities by running:
+- `$ wget https://github.com/blackrim/phyutility/releases/download/v2.7.1/phyutility_2.7.1.tar.gz`
+3) Unzip the .gz file by running:
+- `$ gunzip phyutility_2.7.1.tar.gz` 
+4) Unpack the .tar file by:
+- `tar -xvf phyutility_2.7.1.tar`
+5) Go back to the main folder: `$ cd ..`
+
 
 ## Run snakemake
 1) Open the snakefile by running:
@@ -87,11 +99,31 @@ For example: ORIGIN = "naturalis" to ORIGIN = "donovan"
 - `$ snakemake --snakefile Snakefile_A2_Contigs -F part4`
 - `$ snakemake --snakefile Snakefile_A3_Exons -F part5`
 - `$ snakemake --snakefile Snakefile_A3_Exons -F part6`
-
 5) To run the single pipeline, make sure the path ./results/A09_consensus_exons only contains the samples of interest and that at least one sample covers all exons to make Snakefile_A4_MSA work.
 - `$ snakemake --snakefile Snakefile_A3_Exons -F merge_exon_seqs`
 - `$ snakemake --snakefile Snakefile_A4_MSA -F all`
 - `$ snakemake --snakefile Snakefile_A5_RAxML -F phyutilities`
+
+## Build phylogenetic tree
+6) The concatenated MSA output can be found in the path: results/A15_S1L1M1R_RAxML/S1L1M1R_msa.aln
+This nexus file should be converted to a phy file (I used Geneious).
+7) To select the best model using PartitionFinder, datablocks (how the genes are splitted in all 3 codon positions) should be given as input. 
+This can be calculated by running: 
+- `$ python src/create_data_blocks.py`
+The output will be in the path: results/A15_S1L1M1R_RAxML/datablocks.txt. This data should be copied to the partition_finder.cfg configuration file (follow the PartitionFinder manual). The output looks like this:
+
+>AT5G23110_1_6_pos1 = 1-219\3;
+>AT5G23110_1_6_pos2 = 2-219\3;
+>AT5G23110_1_6_pos3 = 3-219\3;
+>AT5G23110_1_5_pos1 = 220-480\3;
+>AT5G23110_1_5_pos2 = 221-480\3;
+>...
+>AT4G20090_1_1_pos3 = 527529-529296\3;
+>AT2G40840_1_12_pos1 = 529297-529539\3;
+>AT2G40840_1_12_pos2 = 529298-529539\3;
+>AT2G40840_1_12_pos3 = 529299-529539\3;
+8) Run PartitionFinder for model selection (follow PF2 manual)
+9) Run RAxML for phylogenetic tree reconstruction (follow RAxML manual)
 
 
 ## Get sequenced genome
@@ -110,7 +142,7 @@ https://www.ncbi.nlm.nih.gov/assembly/GCF_000004255.2
 - `awk 'BEGIN{FS=OFS="/";filesuffix="genomic.fna.gz"}{ftpdir=$0;asm=$10;file=asm"_"filesuffix;print "wget "ftpdir,file}' ftp_folder.txt > download_fna_files.sh`
 6) Download the sequence genome by:
 `$ source download_fna_files.sh`
-7) Unpack the .gz file by: (is not necessary)
+7) Unpack the .gz file by: 
 `$ gunzip GCA_000004255.1_v.1.0_genomic.fna.gz`
 8) Change the .fna file to arl_ref.fa file and move this file back to the sequence_genomes directory by:
 - `$ mv GCA_000004255.1_v.1.0_genomic.fna ../arl_ref.fa`
