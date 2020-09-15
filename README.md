@@ -1,5 +1,7 @@
 # brassicaceae-hybseq-pipeline
-This is obtained by running the command:
+A pipeline built from scratch based on Nikolov et al. (2019) using Snakemake for efficient phylogenetic reconstruction of Brassicaceae (and other taxa) at species-level based on hybridization sequencing data.
+
+The pipeline is obtained by running the command:
 `$ git clone https://github.com/naturalis/brassicaceae-hybseq-pipeline.git`
 
 Go to this directory by running the command:
@@ -75,12 +77,10 @@ Or all at once:
 ## Download phyutilities v2.7.1:
 For the concatenation step in Snakemake_A5_RAxML
 1) Go to the ./src folder
-2) Donwload phyutilities by running:
+2) Download phyutilities by running:
 - `$ wget https://github.com/blackrim/phyutility/releases/download/v2.7.1/phyutility_2.7.1.tar.gz`
-3) Unzip the .gz file by running:
-- `$ gunzip phyutility_2.7.1.tar.gz` 
-4) Unpack the .tar file by:
-- `tar -xvf phyutility_2.7.1.tar`
+3) Unzip the .gz file by running: `$ gunzip phyutility_2.7.1.tar.gz` 
+4) Unpack the .tar file by: `tar -xvf phyutility_2.7.1.tar`
 5) Go back to the main folder: `$ cd ..`
 
 
@@ -110,20 +110,9 @@ This nexus file should be converted to a phy file (I used Geneious).
 7) To select the best model using PartitionFinder, datablocks (how the genes are splitted in all 3 codon positions) should be given as input. 
 This can be calculated by running: 
 - `$ python src/create_data_blocks.py`
-The output will be in the path: results/A15_S1L1M1R_RAxML/datablocks.txt. This data should be copied to the partition_finder.cfg configuration file (follow the PartitionFinder manual). The output looks like this:
-
->AT5G23110_1_6_pos1 = 1-219\3;
->AT5G23110_1_6_pos2 = 2-219\3;
->AT5G23110_1_6_pos3 = 3-219\3;
->AT5G23110_1_5_pos1 = 220-480\3;
->AT5G23110_1_5_pos2 = 221-480\3;
->...
->AT4G20090_1_1_pos3 = 527529-529296\3;
->AT2G40840_1_12_pos1 = 529297-529539\3;
->AT2G40840_1_12_pos2 = 529298-529539\3;
->AT2G40840_1_12_pos3 = 529299-529539\3;
-8) Run PartitionFinder for model selection (follow PF2 manual)
-9) Run RAxML for phylogenetic tree reconstruction (follow RAxML manual)
+8) The output will be in the path: results/A15_S1L1M1R_RAxML/datablocks.txt. This data should be copied to the partition_finder.cfg configuration file under '[data_blocks]' (follow the PartitionFinder manual).
+9) Run PartitionFinder for model selection (follow PF2 manual)
+10) Run RAxML for phylogenetic tree reconstruction (follow RAxML manual)
 
 
 ## Get sequenced genome
