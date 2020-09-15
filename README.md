@@ -1,6 +1,8 @@
 # brassicaceae-hybseq-pipeline
 A pipeline built from scratch based on Nikolov et al. (2019) using Snakemake for efficient phylogenetic reconstruction of Brassicaceae (and other taxa) at species-level based on hybridization sequencing data.
 
+![alt text](https://github.com/naturalis/brassicaceae-hybseq-pipeline/blob/master/img/workflow_brassicaceae-hybseq-pipeline.jpg?raw=true)
+
 The pipeline is obtained by running the command:
 `$ git clone https://github.com/naturalis/brassicaceae-hybseq-pipeline.git`
 
